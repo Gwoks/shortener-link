@@ -69,6 +69,21 @@ const BD_IDS_SCHEMA = {
   },
 }
 
+// This harness does not register .claude/agents/*.md as spawnable agentTypes,
+// so each specialist runs on the default agent and adopts its role by reading
+// its own .md file (the single source of truth for the role's system prompt).
+function roleAgent(role, task, opts) {
+  opts = opts || {}
+  const fullPrompt =
+    `You are the "${role}" specialist in a multi-agent feature pipeline. ` +
+    `FIRST, read the file .claude/agents/${role}.md and adopt it as your COMPLETE system prompt — ` +
+    `your role, operating rules, task format, and return-value contract all come from that file. ` +
+    `THEN carry out the task below, honoring that contract exactly.\n\n${task}`
+  const o = { label: opts.label, phase: opts.phase }
+  if (opts.schema) o.schema = opts.schema
+  return agent(fullPrompt, o)
+}
+
 function bdRun(instruction, label) {
   return agent(
     `You are running beads (bd) CLI commands for the feature pipeline. Use ONLY non-interactive commands; never use 'bd edit'. ${instruction} Return the string "ok" when finished (or the requested JSON).`,
@@ -91,28 +106,30 @@ async function runDesign() {
     { label: 'bd:setup', phase: 'bd-setup', schema: BD_IDS_SCHEMA }
   )
 
-  const brief = await agent(
+  const brief = await roleAgent(
+    'product-manager',
     `TASK: BRIEF.\nFeature prompt:\n${prompt}${answers ? '\n\nHuman answers to earlier open questions:\n' + JSON.stringify(answers, null, 2) : ''}`,
-    { label: 'pm:brief', phase: 'Discovery', agentType: 'product-manager' }
+    { label: 'pm:brief', phase: 'Discovery' }
   )
 
   const fb = await parallel([
-    () => agent(`TASK: FEEDBACK.\nPM brief:\n${brief}`, { label: 'ux:feedback', phase: 'Discovery', agentType: 'ux-researcher', schema: FEEDBACK_SCHEMA }),
-    () => agent(`TASK: FEEDBACK.\nPM brief:\n${brief}`, { label: 'designer:feedback', phase: 'Discovery', agentType: 'designer', schema: FEEDBACK_SCHEMA }),
-    () => agent(`TASK: FEEDBACK.\nPM brief:\n${brief}`, { label: 'architect:feedback', phase: 'Discovery', agentType: 'system-architect', schema: FEEDBACK_SCHEMA }),
+    () => roleAgent('ux-researcher', `TASK: FEEDBACK.\nPM brief:\n${brief}`, { label: 'ux:feedback', phase: 'Discovery', schema: FEEDBACK_SCHEMA }),
+    () => roleAgent('designer', `TASK: FEEDBACK.\nPM brief:\n${brief}`, { label: 'designer:feedback', phase: 'Discovery', schema: FEEDBACK_SCHEMA }),
+    () => roleAgent('system-architect', `TASK: FEEDBACK.\nPM brief:\n${brief}`, { label: 'architect:feedback', phase: 'Discovery', schema: FEEDBACK_SCHEMA }),
   ])
   const feedback = JSON.stringify({ ux: fb[0], designer: fb[1], architect: fb[2] }, null, 2)
 
-  const prd = await agent(
+  const prd = await roleAgent(
+    'product-manager',
     `TASK: PRD. slug=${slug}. Write ${DOCS}/PRD.md, then return the PRD JSON.\nFeature prompt:\n${prompt}\n\nYour brief:\n${brief}\n\nSpecialist feedback:\n${feedback}${answers ? '\n\nHuman answers:\n' + JSON.stringify(answers, null, 2) : ''}`,
-    { label: 'pm:prd', phase: 'PRD', agentType: 'product-manager', schema: PRD_SCHEMA }
+    { label: 'pm:prd', phase: 'PRD', schema: PRD_SCHEMA }
   )
   await bdRun(`Close the PRD issue: bd close ${bd.issues.prd}. Then claim the next three (separate commands): bd update ${bd.issues.journey} --claim; bd update ${bd.issues.design} --claim; bd update ${bd.issues.architecture} --claim.`, 'bd:prd-done')
 
   await parallel([
-    () => agent(`TASK: JOURNEY. slug=${slug}. Read ${DOCS}/PRD.md, then write ${DOCS}/USER-JOURNEY.md.`, { label: 'ux:journey', phase: 'Design artifacts', agentType: 'ux-researcher' }),
-    () => agent(`TASK: DESIGN. slug=${slug}. Read ${DOCS}/PRD.md (and ${DOCS}/USER-JOURNEY.md if it exists), then write ${DOCS}/DESIGN.md.`, { label: 'designer:design', phase: 'Design artifacts', agentType: 'designer' }),
-    () => agent(`TASK: ARCHITECTURE. slug=${slug}. Read ${DOCS}/PRD.md, then write ${DOCS}/ARCHITECTURE.md.`, { label: 'architect:arch', phase: 'Design artifacts', agentType: 'system-architect' }),
+    () => roleAgent('ux-researcher', `TASK: JOURNEY. slug=${slug}. Read ${DOCS}/PRD.md, then write ${DOCS}/USER-JOURNEY.md.`, { label: 'ux:journey', phase: 'Design artifacts' }),
+    () => roleAgent('designer', `TASK: DESIGN. slug=${slug}. Read ${DOCS}/PRD.md (and ${DOCS}/USER-JOURNEY.md if it exists), then write ${DOCS}/DESIGN.md.`, { label: 'designer:design', phase: 'Design artifacts' }),
+    () => roleAgent('system-architect', `TASK: ARCHITECTURE. slug=${slug}. Read ${DOCS}/PRD.md, then write ${DOCS}/ARCHITECTURE.md.`, { label: 'architect:arch', phase: 'Design artifacts' }),
   ])
   await bdRun(`Close these issues (separate commands): bd close ${bd.issues.journey}; bd close ${bd.issues.design}; bd close ${bd.issues.architecture}.`, 'bd:design-done')
 
@@ -133,11 +150,11 @@ async function runBuild() {
   const close = (k) => (bdi ? bdRun(`Close: bd close ${bdi[k]}.`, `bd:${k}-close`) : Promise.resolve('skip'))
 
   await claim('backend')
-  const backend = await agent(`TASK: IMPLEMENT BACKEND. slug=${slug}. Read everything in ${DOCS}/. Implement the backend.`, { label: 'backend:impl', phase: 'Backend', agentType: 'backend-engineer' })
+  const backend = await roleAgent('backend-engineer', `TASK: IMPLEMENT BACKEND. slug=${slug}. Read everything in ${DOCS}/. Implement the backend.`, { label: 'backend:impl', phase: 'Backend' })
   await close('backend')
 
   await claim('frontend')
-  await agent(`TASK: IMPLEMENT FRONTEND. slug=${slug}. Read everything in ${DOCS}/. Implement the frontend per DESIGN.md and the API contract in ARCHITECTURE.md.\n\nBackend engineer's handoff notes:\n${backend}`, { label: 'frontend:impl', phase: 'Frontend', agentType: 'frontend-engineer' })
+  await roleAgent('frontend-engineer', `TASK: IMPLEMENT FRONTEND. slug=${slug}. Read everything in ${DOCS}/. Implement the frontend per DESIGN.md and the API contract in ARCHITECTURE.md.\n\nBackend engineer's handoff notes:\n${backend}`, { label: 'frontend:impl', phase: 'Frontend' })
   await close('frontend')
 
   await claim('qa')
@@ -146,14 +163,14 @@ async function runBuild() {
   let iterations = 0
   while (iterations < MAX) {
     iterations++
-    verdict = await agent(`TASK: VERIFY (round ${iterations}). slug=${slug}. Read everything in ${DOCS}/. Build, run, and test the project; verify every acceptance criterion in PRD.md and assess design fidelity. Write ${DOCS}/QA-REPORT.md and return the verdict JSON.`, { label: `qa:round-${iterations}`, phase: 'QA', agentType: 'qa-engineer', schema: QA_SCHEMA })
+    verdict = await roleAgent('qa-engineer', `TASK: VERIFY (round ${iterations}). slug=${slug}. Read everything in ${DOCS}/. Build, run, and test the project; verify every acceptance criterion in PRD.md and assess design fidelity. Write ${DOCS}/QA-REPORT.md and return the verdict JSON.`, { label: `qa:round-${iterations}`, phase: 'QA', schema: QA_SCHEMA })
     if (verdict.pass) break
     log(`QA round ${iterations}: FAIL — ${verdict.backendIssues.length} backend, ${verdict.frontendIssues.length} frontend issue(s).`)
     if (verdict.backendIssues.length) {
-      await agent(`TASK: FIX BACKEND. slug=${slug}. Address each QA item:\n- ${verdict.backendIssues.join('\n- ')}`, { label: `backend:fix-${iterations}`, phase: 'QA', agentType: 'backend-engineer' })
+      await roleAgent('backend-engineer', `TASK: FIX BACKEND. slug=${slug}. Address each QA item:\n- ${verdict.backendIssues.join('\n- ')}`, { label: `backend:fix-${iterations}`, phase: 'QA' })
     }
     if (verdict.frontendIssues.length) {
-      await agent(`TASK: FIX FRONTEND. slug=${slug}. Address each QA item:\n- ${verdict.frontendIssues.join('\n- ')}`, { label: `frontend:fix-${iterations}`, phase: 'QA', agentType: 'frontend-engineer' })
+      await roleAgent('frontend-engineer', `TASK: FIX FRONTEND. slug=${slug}. Address each QA item:\n- ${verdict.frontendIssues.join('\n- ')}`, { label: `frontend:fix-${iterations}`, phase: 'QA' })
     }
   }
   if (verdict && verdict.pass) { await close('qa'); log('QA passed.') }
