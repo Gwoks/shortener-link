@@ -12,13 +12,15 @@ export const meta = {
   ],
 }
 
-const prompt = args && args.prompt
-const phase = (args && args.phase) || 'design'
-const slug = args && args.slug
-const answers = (args && args.answers) || null
-const passedBdIssues = (args && args.bdIssues) || null
+// Be robust to how the runtime delivers args: object, JSON string, or undefined.
+const ARGS = (typeof args === 'string') ? JSON.parse(args) : (args || {})
+const prompt = ARGS.prompt
+const phase = ARGS.phase || 'design'
+const slug = ARGS.slug
+const answers = ARGS.answers || null
+const passedBdIssues = ARGS.bdIssues || null
 
-if (!slug) throw new Error('args.slug is required (e.g. "link-shortener")')
+if (!slug) throw new Error('args.slug is required (e.g. "link-shortener"); received args of type ' + (typeof args))
 const DOCS = `docs/features/${slug}`
 
 const FEEDBACK_SCHEMA = {
