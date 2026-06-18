@@ -79,7 +79,6 @@ function bdRun(instruction, label) {
 async function runDesign() {
   if (!prompt) throw new Error('args.prompt is required for the design phase')
 
-  phase('bd-setup')
   const bd = await agent(
     [
       `Create bd issue tracking for a feature pipeline run with slug "${slug}".`,
@@ -92,7 +91,6 @@ async function runDesign() {
     { label: 'bd:setup', phase: 'bd-setup', schema: BD_IDS_SCHEMA }
   )
 
-  phase('Discovery')
   const brief = await agent(
     `TASK: BRIEF.\nFeature prompt:\n${prompt}${answers ? '\n\nHuman answers to earlier open questions:\n' + JSON.stringify(answers, null, 2) : ''}`,
     { label: 'pm:brief', phase: 'Discovery', agentType: 'product-manager' }
@@ -105,14 +103,12 @@ async function runDesign() {
   ])
   const feedback = JSON.stringify({ ux: fb[0], designer: fb[1], architect: fb[2] }, null, 2)
 
-  phase('PRD')
   const prd = await agent(
     `TASK: PRD. slug=${slug}. Write ${DOCS}/PRD.md, then return the PRD JSON.\nFeature prompt:\n${prompt}\n\nYour brief:\n${brief}\n\nSpecialist feedback:\n${feedback}${answers ? '\n\nHuman answers:\n' + JSON.stringify(answers, null, 2) : ''}`,
     { label: 'pm:prd', phase: 'PRD', agentType: 'product-manager', schema: PRD_SCHEMA }
   )
   await bdRun(`Close the PRD issue: bd close ${bd.issues.prd}. Then claim the next three (separate commands): bd update ${bd.issues.journey} --claim; bd update ${bd.issues.design} --claim; bd update ${bd.issues.architecture} --claim.`, 'bd:prd-done')
 
-  phase('Design artifacts')
   await parallel([
     () => agent(`TASK: JOURNEY. slug=${slug}. Read ${DOCS}/PRD.md, then write ${DOCS}/USER-JOURNEY.md.`, { label: 'ux:journey', phase: 'Design artifacts', agentType: 'ux-researcher' }),
     () => agent(`TASK: DESIGN. slug=${slug}. Read ${DOCS}/PRD.md (and ${DOCS}/USER-JOURNEY.md if it exists), then write ${DOCS}/DESIGN.md.`, { label: 'designer:design', phase: 'Design artifacts', agentType: 'designer' }),
@@ -136,17 +132,14 @@ async function runBuild() {
   const claim = (k) => (bdi ? bdRun(`Claim: bd update ${bdi[k]} --claim.`, `bd:${k}-claim`) : Promise.resolve('skip'))
   const close = (k) => (bdi ? bdRun(`Close: bd close ${bdi[k]}.`, `bd:${k}-close`) : Promise.resolve('skip'))
 
-  phase('Backend')
   await claim('backend')
   const backend = await agent(`TASK: IMPLEMENT BACKEND. slug=${slug}. Read everything in ${DOCS}/. Implement the backend.`, { label: 'backend:impl', phase: 'Backend', agentType: 'backend-engineer' })
   await close('backend')
 
-  phase('Frontend')
   await claim('frontend')
   await agent(`TASK: IMPLEMENT FRONTEND. slug=${slug}. Read everything in ${DOCS}/. Implement the frontend per DESIGN.md and the API contract in ARCHITECTURE.md.\n\nBackend engineer's handoff notes:\n${backend}`, { label: 'frontend:impl', phase: 'Frontend', agentType: 'frontend-engineer' })
   await close('frontend')
 
-  phase('QA')
   await claim('qa')
   const MAX = 3
   let verdict = null
