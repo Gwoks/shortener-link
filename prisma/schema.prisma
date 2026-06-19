@@ -1,0 +1,161 @@
+// Prisma schema — Link Shortener (ARCHITECTURE.md §5)
+// PostgreSQL primary. Auth.js standard tables included via the Prisma adapter.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums (§5.2) ────────────────────────────────────────────────────────────
+enum LinkStatus {
+  ACTIVE
+  EXPIRED
+  DEACTIVATED
+}
+
+enum MetaStatus {
+  PENDING
+  READY
+  FAILED
+}
+
+enum RefCategory {
+  SOCIAL
+  SEARCH
+  DIRECT
+  REFERRAL
+  OTHER
+}
+
+// ─── User (§5.1) ─────────────────────────────────────────────────────────────
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
+  passwordHash  String? // argon2id; null for OAuth-only users (NFR-5)
+  createdAt     DateTime  @default(now())
+
+  accounts Account[]
+  sessions Session[]
+  links    Link[]
+}
+
+// ─── Auth.js adapter tables ──────────────────────────────────────────────────
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── Link (§5.1) — core entity ───────────────────────────────────────────────
+model Link {
+  id              String     @id @default(cuid())
+  code            String     @unique // short code OR alias; stored lowercased
+  aliasDisplay    String? // original-case alias for display
+  destinationUrl  String
+  ownerId         String? // null = guest link (FR-33)
+  isGuest         Boolean    @default(false)
+  guestKey        String? // hash of guest cookie for claiming (FR-34)
+  status          LinkStatus @default(ACTIVE)
+  metaStatus      MetaStatus @default(PENDING)
+  metaTitle       String?
+  metaDescription String?
+  passwordHash    String? // argon2id; presence => password-protected (FR-16)
+  expiresAt       DateTime?
+  maxClicks       Int?
+  clickCount      Int        @default(0) // worker-maintained denormalized total
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  owner   User?        @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  events  ClickEvent[]
+  rollups ClickRollup[]
+
+  // Indexes (§5.4)
+  @@index([ownerId, createdAt(sort: Desc)])
+  @@index([status, expiresAt])
+  @@index([guestKey])
+}
+
+// ─── ClickEvent (§5.1) — analytics fact table ────────────────────────────────
+model ClickEvent {
+  id                String      @id @default(cuid())
+  linkId            String
+  occurredAt        DateTime
+  visitorKey        String // hashed/truncated (A-PII / A-UNIQUE)
+  isUnique          Boolean
+  referrerCategory  RefCategory
+  referrerHost      String?
+  country           String?
+  city              String?
+  deviceType        String?
+  browser           String?
+  streamId          String      @unique // Redis stream entry id (idempotent ingest)
+
+  link Link @relation(fields: [linkId], references: [id], onDelete: Cascade)
+
+  @@index([linkId, occurredAt])
+}
+
+// ─── ClickRollup (§5.1) — per-link daily aggregate ───────────────────────────
+model ClickRollup {
+  id         String   @id @default(cuid())
+  linkId     String
+  day        DateTime @db.Date
+  clicks     Int      @default(0)
+  uniques    Int      @default(0)
+  byReferrer Json     @default("{}")
+  byCountry  Json     @default("{}")
+  byDevice   Json     @default("{}")
+  byBrowser  Json     @default("{}")
+
+  link Link @relation(fields: [linkId], references: [id], onDelete: Cascade)
+
+  @@unique([linkId, day])
+}
+
+// ─── VisitorSeen — supports unique-visitor detection at ingest ───────────────
+// First time a (linkId, visitorKey) pair is seen, the event is counted unique.
+model VisitorSeen {
+  linkId     String
+  visitorKey String
+  firstSeen  DateTime @default(now())
+
+  @@id([linkId, visitorKey])
+}

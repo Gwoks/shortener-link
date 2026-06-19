@@ -38,3 +38,16 @@ lerna-debug.log*
 .dolt/
 *.db
 .beads-credential-key
+
+# Next.js build output
+/.next/
+/out/
+
+# Local secrets (keep .env.example and .env.test templates committed)
+.env
+.env*.local
+
+# Test/E2E output
+/test-results/
+/playwright-report/
+/blob-report/

@@ -1,0 +1,5 @@
+# The GeoLite2 DB requires a free MaxMind license and is provisioned per
+# ARCHITECTURE.md §10.3 (via `pnpm fetch:geoip` or a manual drop). Never commit it.
+GeoLite2-City.mmdb
+GeoLite2-City.tar.gz
+*.mmdb
