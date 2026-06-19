@@ -97,6 +97,10 @@ export interface SummaryAnalytics {
   totals: { clicks: number; uniques: number }
   series: Array<{ day: string; clicks: number; uniques: number }>
   topLinks: Array<{ linkId: string; code: string; clicks: number }>
+  referrers: Array<{ category: string; host: string | null; clicks: number }>
+  geo: Array<{ country: string; city: string | null; clicks: number }>
+  devices: Array<{ type: string; clicks: number }>
+  browsers: Array<{ name: string; clicks: number }>
   insufficientData: boolean
 }
 
@@ -106,7 +110,7 @@ export async function getSummaryAnalytics(userId: string, range: Range, now: num
   const links = await prisma.link.findMany({ where: { ownerId: userId }, select: { id: true, code: true, aliasDisplay: true } })
   const linkIds = links.map((l) => l.id)
   if (linkIds.length === 0) {
-    return { totals: { clicks: 0, uniques: 0 }, series: [], topLinks: [], insufficientData: true }
+    return { totals: { clicks: 0, uniques: 0 }, series: [], topLinks: [], referrers: [], geo: [], devices: [], browsers: [], insufficientData: true }
   }
 
   const rollups = await prisma.clickRollup.findMany({
@@ -117,6 +121,10 @@ export async function getSummaryAnalytics(userId: string, range: Range, now: num
   let uniques = 0
   const perDay = new Map<string, { clicks: number; uniques: number }>()
   const perLink = new Map<string, number>()
+  const byReferrer: CountMap = {}
+  const byCountry: CountMap = {}
+  const byDevice: CountMap = {}
+  const byBrowser: CountMap = {}
 
   for (const r of rollups) {
     clicks += r.clicks
@@ -127,6 +135,10 @@ export async function getSummaryAnalytics(userId: string, range: Range, now: num
     d.uniques += r.uniques
     perDay.set(day, d)
     perLink.set(r.linkId, (perLink.get(r.linkId) ?? 0) + r.clicks)
+    mergeInto(byReferrer, r.byReferrer)
+    mergeInto(byCountry, r.byCountry)
+    mergeInto(byDevice, r.byDevice)
+    mergeInto(byBrowser, r.byBrowser)
   }
 
   const series = [...perDay.entries()]
@@ -139,5 +151,17 @@ export async function getSummaryAnalytics(userId: string, range: Range, now: num
     .sort((a, b) => b.clicks - a.clicks)
     .slice(0, 10)
 
-  return { totals: { clicks, uniques }, series, topLinks, insufficientData: clicks === 0 }
+  // Aggregate breakdowns across all links (same shape/derivation as per-link).
+  const referrers = topEntries(byReferrer).map(({ key, clicks }) => {
+    const [category, host] = key.split('|')
+    return { category, host: host || null, clicks }
+  })
+  const geo = topEntries(byCountry).map(({ key, clicks }) => {
+    const [country, city] = key.split('|')
+    return { country, city: city || null, clicks }
+  })
+  const devices = topEntries(byDevice).map(({ key, clicks }) => ({ type: key, clicks }))
+  const browsers = topEntries(byBrowser).map(({ key, clicks }) => ({ name: key, clicks }))
+
+  return { totals: { clicks, uniques }, series, topLinks, referrers, geo, devices, browsers, insufficientData: clicks === 0 }
 }

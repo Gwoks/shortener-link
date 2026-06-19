@@ -90,6 +90,10 @@ export interface SummaryAnalytics {
   totals: { clicks: number; uniques: number }
   series: Array<{ day: string; clicks: number; uniques: number }>
   topLinks: Array<{ linkId: string; code: string; clicks: number }>
+  referrers: Array<{ category: string; host: string | null; clicks: number }>
+  geo: Array<{ country: string; city: string | null; clicks: number }>
+  devices: Array<{ type: string; clicks: number }>
+  browsers: Array<{ name: string; clicks: number }>
   insufficientData: boolean
 }
 

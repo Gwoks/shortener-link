@@ -61,13 +61,13 @@ export async function processEvent(ev: RawEvent): Promise<void> {
   })
 
   // Unique-visitor detection: first time (linkId, visitorKey) is seen → unique.
-  let isUnique = false
-  try {
-    await prisma.visitorSeen.create({ data: { linkId: ev.linkId, visitorKey: vkey } })
-    isUnique = true
-  } catch {
-    isUnique = false // already seen (PK conflict)
-  }
+  // createMany + skipDuplicates avoids throwing (and Prisma logging an error) on
+  // the EXPECTED unique-constraint conflict for a repeat visitor.
+  const seen = await prisma.visitorSeen.createMany({
+    data: [{ linkId: ev.linkId, visitorKey: vkey }],
+    skipDuplicates: true,
+  })
+  const isUnique = seen.count === 1
 
   const day = new Date(Date.UTC(occurredAt.getUTCFullYear(), occurredAt.getUTCMonth(), occurredAt.getUTCDate()))
 

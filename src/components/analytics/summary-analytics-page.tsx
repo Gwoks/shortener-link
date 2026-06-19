@@ -23,6 +23,7 @@ import { api, ApiError } from '../lib/api'
 import { formatNumber } from '../lib/format'
 import type { AnalyticsRange, SummaryAnalytics } from '../lib/types'
 import { Button } from '../ui/button'
+import { BrowsersCard, DevicesCard, GeoCard, ReferrersCard } from './analytics-cards'
 import {
   AnalyticsEmptyState,
   ChartCard,
@@ -169,11 +170,15 @@ function SummaryBody({ data, range }: { data: Loaded; range: AnalyticsRange }) {
       ) : (
         <>
           <ClicksOverTimeCard series={summary.series} />
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <ReferrersCard referrers={summary.referrers} total={summary.totals.clicks} />
+            <DevicesCard devices={summary.devices} />
+          </div>
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <GeoCard geo={summary.geo} total={summary.totals.clicks} />
+            <BrowsersCard browsers={summary.browsers} />
+          </div>
           <TopLinksCard topLinks={summary.topLinks} total={summary.totals.clicks} />
-          <p className="text-caption text-text-tertiary">
-            Referrer, geography, and device breakdowns are available per link — open a link below to
-            see them.
-          </p>
         </>
       )}
     </div>
