@@ -12,6 +12,7 @@ import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { PageHeader } from '../app/app-shell'
+import { GuestClaimPrompt } from '../guest/claim-prompt'
 import { api, ApiError } from '../lib/api'
 import type { LinkResource } from '../lib/types'
 import { Button } from '../ui/button'
@@ -223,6 +224,9 @@ export function LinksPage() {
         onOpenChange={setDeleteOpen}
         onDeleted={handleDeleted}
       />
+      {/* Guest-claim prompt (FR-34, AC-42): renders only when this browser holds
+          still-live guest links; on claim we refetch so they appear in the list. */}
+      <GuestClaimPrompt onClaimed={() => load(query)} />
     </div>
   )
 }
