@@ -5,11 +5,8 @@
 //! `services::redirect::resolve`; this handler does cache/DB orchestration,
 //! unlock-cookie verification, max-click enforcement, and response shaping.
 
-use axum::extract::{Path, State};
 use axum::http::{header, HeaderMap, HeaderValue, StatusCode};
 use axum::response::{IntoResponse, Response};
-use axum::routing::get;
-use axum::Router;
 
 use crate::queue::ClickMsg;
 use crate::routes::links::unlock_cookie_name;
@@ -21,11 +18,7 @@ use crate::state::AppState;
 
 pub const VID_COOKIE: &str = "vid";
 
-pub fn router() -> Router<AppState> {
-    Router::new().route("/:code", get(redirect))
-}
-
-fn code_shape_ok(code: &str) -> bool {
+pub fn code_shape_ok(code: &str) -> bool {
     let len = code.chars().count();
     if len < 3 || len > 50 {
         return false;
@@ -59,18 +52,16 @@ fn random_vid() -> String {
     (0..32).map(|_| HEX[rng.gen_range(0..16)] as char).collect()
 }
 
-async fn redirect(
-    State(state): State<AppState>,
-    Path(code): Path<String>,
-    headers: HeaderMap,
-) -> Response {
-    if !code_shape_ok(&code) {
+/// Resolve a short code to a clicker response. Shared by the single-segment
+/// dispatcher (`routes::spa::code_or_spa`). Ports `src/app/[code]/route.ts`.
+pub async fn handle_code(state: &AppState, code: &str, headers: &HeaderMap) -> Response {
+    if !code_shape_ok(code) {
         return html_response(dead_link_html("not-found"), StatusCode::NOT_FOUND);
     }
 
     let now = chrono::Utc::now().timestamp_millis();
 
-    let resolved = resolve_for_redirect(&state, &code).await;
+    let resolved = resolve_for_redirect(state, code).await;
     let (link_view, link_id) = match &resolved {
         Some((v, id)) => (Some(v.clone()), Some(id.clone())),
         None => (None, None),
@@ -78,8 +69,8 @@ async fn redirect(
 
     let unlocked = match &link_view {
         Some(v) if v.has_password => {
-            let token = cookie_value(&headers, &unlock_cookie_name(&code));
-            verify_token(token.as_deref(), &code, &state.cfg.auth_secret, now)
+            let token = cookie_value(headers, &unlock_cookie_name(code));
+            verify_token(token.as_deref(), code, &state.cfg.auth_secret, now)
         }
         _ => false,
     };
@@ -87,7 +78,7 @@ async fn redirect(
     let ctx = RedirectContext {
         now,
         unlocked,
-        live_click_count: state.cache.peek_click_count(&code),
+        live_click_count: state.cache.peek_click_count(code),
     };
 
     let decision = resolve(link_view.as_ref(), &ctx);
@@ -95,29 +86,29 @@ async fn redirect(
     match decision {
         Decision::NotFound => html_response(dead_link_html("not-found"), StatusCode::NOT_FOUND),
         Decision::Dead { reason } => html_response(dead_link_html(&reason), StatusCode::GONE),
-        Decision::Gate => html_response(gate_html(&code), StatusCode::OK),
+        Decision::Gate => html_response(gate_html(code), StatusCode::OK),
         Decision::Redirect { url, status } => {
             let view = link_view.as_ref().expect("redirect implies a link");
 
             // Enforce max-clicks atomically: deny the (K+1)th hit (AC-21).
             if let Some(max) = view.max_clicks {
-                let live = state.cache.incr_click_count(&code, view.click_count);
+                let live = state.cache.incr_click_count(code, view.click_count);
                 if live > max {
                     return html_response(dead_link_html("max-clicks"), StatusCode::GONE);
                 }
             }
 
-            let vid_cookie = cookie_value(&headers, VID_COOKIE);
+            let vid_cookie = cookie_value(headers, VID_COOKIE);
 
             // Fire-and-forget click enqueue (never blocks/errs the redirect).
             if let Some(id) = link_id {
                 let _ = state.click_tx.send(ClickMsg {
                     link_id: id,
-                    code: code.clone(),
+                    code: code.to_string(),
                     occurred_at_ms: now,
-                    ip: client_ip(&headers),
-                    user_agent: header_str(&headers, header::USER_AGENT),
-                    referer: header_str(&headers, header::REFERER),
+                    ip: client_ip(headers),
+                    user_agent: header_str(headers, header::USER_AGENT),
+                    referer: header_str(headers, header::REFERER),
                     vid_cookie: vid_cookie.clone(),
                 });
             }
