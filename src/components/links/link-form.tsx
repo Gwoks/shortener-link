@@ -19,7 +19,7 @@
  * Submit is disabled while the alias is taken/invalid/checking (DESIGN §5.5 footer).
  */
 import { Lock } from 'lucide-react'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { api, ApiError } from '../lib/api'
 import { expiryHint, isoToLocalInput, localInputToIso, nowLocalInput } from '../lib/format'
 import type { CreateLinkPayload, LinkResource, PatchLinkPayload, UtmFields } from '../lib/types'
@@ -44,7 +44,10 @@ interface FieldErrors {
 
 /** Best-effort display origin for the alias adornment, e.g. "tess.link/". */
 function useShortOrigin(existing?: LinkResource): string {
-  return useMemo(() => {
+  // Must be identical on the server and the first client render to avoid a
+  // hydration mismatch (server has no window). In create mode we start from a
+  // stable placeholder and swap in the real host after mount.
+  const initial = useMemo(() => {
     if (existing?.shortUrl) {
       try {
         return `${new URL(existing.shortUrl).host}/`
@@ -52,9 +55,14 @@ function useShortOrigin(existing?: LinkResource): string {
         /* fall through */
       }
     }
-    if (typeof window !== 'undefined') return `${window.location.host}/`
     return 'tess.link/'
   }, [existing])
+  const [origin, setOrigin] = useState(initial)
+  useEffect(() => {
+    if (existing?.shortUrl) return
+    if (typeof window !== 'undefined') setOrigin(`${window.location.host}/`)
+  }, [existing])
+  return origin
 }
 
 export function LinkForm({
