@@ -1,16 +1,29 @@
 /**
- * Bulk shortening (ARCHITECTURE §3.2, FR-24). Bulk paste + results table + CSV
- * export land in a later pipeline slice. Placeholder keeps the Bulk nav item live.
+ * Bulk shortening route (ARCHITECTURE §3.2, DESIGN §5.6, FR-24/25/26, AC-31/32/33/34).
+ * Thin server route → the client controller renders the paste textarea, the live
+ * counter + max-URL limit, and the per-row results table with copy-all + CSV
+ * export. A Suspense boundary satisfies the App Router for the client island.
  */
-import { Layers } from 'lucide-react'
-import { ComingSoon } from '@/components/app/coming-soon'
+import { Suspense } from 'react'
+import { BulkPage } from '@/components/links/bulk-page'
+import { PageHeader } from '@/components/app/app-shell'
+import { SkeletonLines } from '@/components/ui/skeleton'
 
-export default function BulkPage() {
+export const dynamic = 'force-dynamic'
+
+export default function BulkRoute() {
   return (
-    <ComingSoon
-      title="Bulk"
-      description="Paste many URLs at once, review per-row results, and export a CSV — arrives in an upcoming slice."
-      icon={Layers}
-    />
+    <Suspense
+      fallback={
+        <div>
+          <PageHeader title="Bulk shorten" />
+          <div className="mx-auto w-full max-w-3xl rounded-md border border-border bg-surface p-6">
+            <SkeletonLines lines={6} />
+          </div>
+        </div>
+      }
+    >
+      <BulkPage />
+    </Suspense>
   )
 }
