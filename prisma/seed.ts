@@ -1,27 +1,41 @@
 /**
- * Seed demo data for QA fixtures (ARCHITECTURE.md §10.1). Creates a demo
- * email/password user and a spread of sample links exercising the states QA
- * verifies: active, password-protected, expired, max-clicks, and a guest link.
- * Idempotent — safe to re-run.
+ * Seed demo data for QA fixtures (ARCHITECTURE.md §10.1). Creates sample
+ * accounts — one ADMIN and regular USERs — plus a spread of sample links
+ * exercising the states QA verifies: active, password-protected, expired,
+ * max-clicks, and a guest link. Idempotent — safe to re-run.
  */
 import '../src/lib/load-env'
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, type Role } from '@prisma/client'
 import argon2 from 'argon2'
 
 const prisma = new PrismaClient()
 
-const DEMO_EMAIL = 'demo@example.com'
-const DEMO_PASSWORD = 'demo-password-123'
+/** Sample accounts seeded for local/dev use (NOT for production). */
+const ACCOUNTS: Array<{ email: string; password: string; name: string; role: Role }> = [
+  { email: 'admin@example.com', password: 'admin-password-123', name: 'Admin User', role: 'ADMIN' },
+  { email: 'user@example.com', password: 'user-password-123', name: 'Regular User', role: 'USER' },
+  { email: 'demo@example.com', password: 'demo-password-123', name: 'Demo User', role: 'USER' },
+]
 
 async function main() {
-  const passwordHash = await argon2.hash(DEMO_PASSWORD, { type: argon2.argon2id })
+  const byEmail: Record<string, { id: string }> = {}
+  for (const acct of ACCOUNTS) {
+    const passwordHash = await argon2.hash(acct.password, { type: argon2.argon2id })
+    byEmail[acct.email] = await prisma.user.upsert({
+      where: { email: acct.email },
+      update: { role: acct.role },
+      create: {
+        email: acct.email,
+        name: acct.name,
+        role: acct.role,
+        passwordHash,
+        emailVerified: new Date(),
+      },
+    })
+  }
 
-  const user = await prisma.user.upsert({
-    where: { email: DEMO_EMAIL },
-    update: {},
-    create: { email: DEMO_EMAIL, name: 'Demo User', passwordHash, emailVerified: new Date() },
-  })
-
+  const demoId = byEmail['demo@example.com'].id
+  const adminId = byEmail['admin@example.com'].id
   const linkPasswordHash = await argon2.hash('secret', { type: argon2.argon2id })
   const now = Date.now()
 
@@ -29,7 +43,7 @@ async function main() {
     {
       code: 'demo01',
       destinationUrl: 'https://example.com/welcome',
-      ownerId: user.id,
+      ownerId: demoId,
       status: 'ACTIVE',
       metaStatus: 'READY',
       metaTitle: 'Example Domain',
@@ -39,7 +53,7 @@ async function main() {
       code: 'demopw',
       aliasDisplay: 'demoPW',
       destinationUrl: 'https://example.com/protected',
-      ownerId: user.id,
+      ownerId: demoId,
       status: 'ACTIVE',
       metaStatus: 'READY',
       metaTitle: 'Protected Page',
@@ -48,7 +62,7 @@ async function main() {
     {
       code: 'demoex',
       destinationUrl: 'https://example.com/expired',
-      ownerId: user.id,
+      ownerId: demoId,
       status: 'ACTIVE',
       metaStatus: 'READY',
       // already expired by datetime → dead-link on visit (AC-20)
@@ -57,10 +71,18 @@ async function main() {
     {
       code: 'demomx',
       destinationUrl: 'https://example.com/limited',
-      ownerId: user.id,
+      ownerId: demoId,
       status: 'ACTIVE',
       metaStatus: 'READY',
       maxClicks: 1,
+    },
+    {
+      code: 'admin1',
+      destinationUrl: 'https://example.com/admin-resource',
+      ownerId: adminId,
+      status: 'ACTIVE',
+      metaStatus: 'READY',
+      metaTitle: "Admin's link",
     },
     {
       code: 'guest1',
@@ -78,7 +100,9 @@ async function main() {
     await prisma.link.upsert({ where: { code: create.code }, update: {}, create })
   }
 
-  console.log(`Seeded demo user (${DEMO_EMAIL} / ${DEMO_PASSWORD}) and ${links.length} sample links.`)
+  console.log('Seeded accounts (email / password — role):')
+  for (const a of ACCOUNTS) console.log(`  ${a.email}  /  ${a.password}   — ${a.role}`)
+  console.log(`Seeded ${links.length} sample links.`)
 }
 
 main()

@@ -58,6 +58,20 @@ pnpm worker         # in a second terminal: the analytics/scrape/expiry worker
 
 The worker is required for click analytics, metadata scraping, and expiry sweeps. The web app runs without it, but those features won't update.
 
+### Sample accounts (after seeding)
+
+`pnpm db:seed` creates these accounts for local use. Each user has a `role` (added by the `add_user_roles` migration). **These are sample credentials — do not use them in production.**
+
+| Email | Password | Role |
+|---|---|---|
+| `admin@example.com` | `admin-password-123` | `ADMIN` |
+| `user@example.com` | `user-password-123` | `USER` |
+| `demo@example.com` | `demo-password-123` | `USER` |
+
+The seed also adds sample links covering each state — active, password-protected (link password `secret`), expired, max-clicks, and a 24h guest link.
+
+> With Docker, the schema migrations run automatically on startup; run the seed once the stack is up with `docker compose exec web pnpm db:seed`.
+
 ---
 
 ## Configuration

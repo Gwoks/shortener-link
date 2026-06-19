@@ -31,6 +31,11 @@ enum RefCategory {
   OTHER
 }
 
+enum Role {
+  USER
+  ADMIN
+}
+
 // ─── User (§5.1) ─────────────────────────────────────────────────────────────
 model User {
   id            String    @id @default(cuid())
@@ -39,6 +44,7 @@ model User {
   name          String?
   image         String?
   passwordHash  String? // argon2id; null for OAuth-only users (NFR-5)
+  role          Role      @default(USER)
   createdAt     DateTime  @default(now())
 
   accounts Account[]
