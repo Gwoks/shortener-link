@@ -56,8 +56,18 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       disabled={asChild ? undefined : disabled || loading}
       {...props}
     >
-      {loading && <Spinner className="h-4 w-4" />}
-      {children}
+      {/* When asChild, Radix Slot requires a SINGLE element child — never inject
+          a sibling (a `loading && <Spinner/>` evaluates to `false`, which would
+          give Slot two children and throw). The leading spinner only applies to
+          the real <button>. */}
+      {asChild ? (
+        children
+      ) : (
+        <>
+          {loading && <Spinner className="h-4 w-4" />}
+          {children}
+        </>
+      )}
     </Comp>
   )
 })
