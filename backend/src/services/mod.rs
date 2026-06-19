@@ -12,6 +12,7 @@ pub mod ratelimit;
 pub mod redirect;
 pub mod referrer;
 pub mod reserved;
+pub mod serialize;
 pub mod shortcode;
 pub mod ssrf;
 pub mod ua;
