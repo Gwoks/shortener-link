@@ -42,6 +42,7 @@ lerna-debug.log*
 # Next.js build output
 /.next/
 /out/
+*.tsbuildinfo
 
 # Local secrets (keep .env.example and .env.test templates committed)
 .env
