@@ -1,0 +1,231 @@
+/**
+ * Design system foundation (DESIGN.md §2 + §6). Semantic, theme-aware tokens
+ * (FR-41/NFR-13). Light is :root; dark is .dark on <html> (Tailwind class
+ * strategy). Components reference semantic tokens only — never raw palette.
+ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* ── Primitive palette — neutral (cool gray) (DESIGN §2.1) ── */
+  --gray-0: #ffffff;
+  --gray-25: #fbfcfd;
+  --gray-50: #f6f8fa;
+  --gray-100: #eceff3;
+  --gray-200: #dfe3e9;
+  --gray-300: #cbd2db;
+  --gray-400: #9aa4b2;
+  --gray-500: #6b7686;
+  --gray-600: #4d5765;
+  --gray-700: #363f4d;
+  --gray-800: #222a36;
+  --gray-850: #1a212b;
+  --gray-900: #131820;
+  --gray-950: #0c1016;
+
+  /* Accent — indigo */
+  --indigo-50: #eef1ff;
+  --indigo-100: #e0e5ff;
+  --indigo-200: #c6cdff;
+  --indigo-300: #a3acff;
+  --indigo-400: #7d87fb;
+  --indigo-500: #5b63f0;
+  --indigo-600: #4a50d8;
+  --indigo-700: #3b40b0;
+  --indigo-400-dark: #8b93ff;
+
+  /* Semantic hues */
+  --green-50: #e9f9f0;
+  --green-100: #cdf0dd;
+  --green-500: #16a34a;
+  --green-600: #15803d;
+  --green-400-dark: #4ade80;
+  --amber-50: #fdf4e3;
+  --amber-100: #fbe7bf;
+  --amber-500: #d97706;
+  --amber-600: #b45309;
+  --amber-400-dark: #fbbf24;
+  --red-50: #fdecec;
+  --red-100: #fbd5d5;
+  --red-500: #dc2626;
+  --red-600: #b91c1c;
+  --red-400-dark: #f87171;
+  --sky-50: #e8f4fd;
+  --sky-100: #cce7fb;
+  --sky-500: #0284c7;
+  --sky-600: #0369a1;
+  --sky-400-dark: #38bdf8;
+
+  /* ── Semantic tokens — light (DESIGN §2.2) ── */
+  --bg-canvas: var(--gray-50);
+  --bg-surface: var(--gray-0);
+  --bg-surface-raised: var(--gray-0);
+  --bg-subtle: var(--gray-50);
+  --bg-hover: var(--gray-100);
+  --bg-active: var(--gray-200);
+  --border-default: var(--gray-200);
+  --border-strong: var(--gray-300);
+  --text-primary: var(--gray-900);
+  --text-secondary: var(--gray-600);
+  --text-tertiary: var(--gray-500);
+  --text-on-accent: var(--gray-0);
+  --accent: var(--indigo-500);
+  --accent-hover: var(--indigo-600);
+  --accent-subtle-bg: var(--indigo-50);
+  --focus-ring: var(--indigo-500);
+  --success-fg: var(--green-600);
+  --success-bg: var(--green-50);
+  --warning-fg: var(--amber-600);
+  --warning-bg: var(--amber-50);
+  --danger-fg: var(--red-600);
+  --danger-bg: var(--red-50);
+  --info-fg: var(--sky-600);
+  --info-bg: var(--sky-50);
+  --lock-fg: var(--gray-700);
+  --lock-bg: var(--gray-100);
+  --overlay-scrim: rgba(12, 16, 22, 0.45);
+
+  /* Chart categorical palette (DESIGN §2.3) — light */
+  --chart-1: #5b63f0;
+  --chart-2: #0ea5e9;
+  --chart-3: #14b8a6;
+  --chart-4: #f59e0b;
+  --chart-5: #ec4899;
+  --chart-6: #8b5cf6;
+  --chart-grid: var(--border-default);
+  --chart-axis: var(--text-tertiary);
+
+  /* Typography families (DESIGN §2.4) */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', 'Cascadia Code', Menlo, Consolas, monospace;
+
+  /* Shadows (DESIGN §2.7) */
+  --shadow-xs: 0 1px 2px rgba(16, 24, 40, 0.05);
+  --shadow-sm: 0 1px 3px rgba(16, 24, 40, 0.08), 0 1px 2px rgba(16, 24, 40, 0.04);
+  --shadow-md: 0 4px 12px rgba(16, 24, 40, 0.1), 0 2px 4px rgba(16, 24, 40, 0.06);
+  --shadow-lg: 0 12px 32px rgba(16, 24, 40, 0.16), 0 4px 8px rgba(16, 24, 40, 0.06);
+
+  /* Motion (DESIGN §2.8) */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --dur-fast: 120ms;
+  --dur-base: 180ms;
+  --dur-slow: 240ms;
+}
+
+.dark {
+  /* ── Semantic tokens — dark (DESIGN §2.2) ── */
+  --bg-canvas: var(--gray-950);
+  --bg-surface: var(--gray-900);
+  --bg-surface-raised: var(--gray-850);
+  --bg-subtle: var(--gray-850);
+  --bg-hover: var(--gray-800);
+  --bg-active: var(--gray-700);
+  --border-default: var(--gray-700);
+  --border-strong: var(--gray-600);
+  --text-primary: var(--gray-50);
+  --text-secondary: var(--gray-300);
+  --text-tertiary: var(--gray-400);
+  --text-on-accent: var(--gray-950);
+  --accent: var(--indigo-400-dark);
+  --accent-hover: var(--indigo-300);
+  --accent-subtle-bg: rgba(139, 147, 255, 0.14);
+  --focus-ring: var(--indigo-400-dark);
+  --success-fg: var(--green-400-dark);
+  --success-bg: rgba(74, 222, 128, 0.14);
+  --warning-fg: var(--amber-400-dark);
+  --warning-bg: rgba(251, 191, 36, 0.14);
+  --danger-fg: var(--red-400-dark);
+  --danger-bg: rgba(248, 113, 113, 0.14);
+  --info-fg: var(--sky-400-dark);
+  --info-bg: rgba(56, 189, 248, 0.14);
+  --lock-fg: var(--gray-200);
+  --lock-bg: var(--gray-800);
+  --overlay-scrim: rgba(0, 0, 0, 0.6);
+
+  /* Chart palette lifted ~10-15% lightness for ≥3:1 on dark (DESIGN §2.3) */
+  --chart-1: #7d87fb;
+  --chart-2: #38bdf8;
+  --chart-3: #2dd4bf;
+  --chart-4: #fbbf24;
+  --chart-5: #f472b6;
+  --chart-6: #a78bfa;
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.6), 0 4px 8px rgba(0, 0, 0, 0.4);
+}
+
+@layer base {
+  * {
+    border-color: var(--border-default);
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background: var(--bg-canvas);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Visible focus ring on EVERY interactive control (DESIGN §6, AC-48).
+     2px focus-ring with a 2px surface-colored offset, ≥3:1 against adjacent. */
+  :focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  /* Remove the default focus ring only when our ring replaces it. */
+  :focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  /* Tabular numbers everywhere counts/metrics live. */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer utilities {
+  /* Skeleton shimmer — sweep on a muted block. Reduced-motion → static (AC-50). */
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    background: var(--bg-subtle);
+    border-radius: 6px;
+  }
+  .skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, var(--bg-hover), transparent);
+    animation: shimmer 1.4s infinite;
+  }
+}
+
+/* Reduced motion: kill all animation/transition; skeleton becomes a static block;
+   spinners stop spinning (DESIGN §2.8, NFR-16, AC-50). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .skeleton::after {
+    display: none;
+  }
+  .skeleton {
+    background: var(--bg-hover);
+  }
+}

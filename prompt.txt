@@ -1,0 +1,68 @@
+Create a complete, feature-rich URL Shortener web application. The goal is to build a modern, scalable, and secure platform similar to Bitly or Dub.co.
+
+
+
+Please provide the architecture, database schema, backend logic, and frontend components based on the requirements below.
+
+
+
+### 1. Tech Stack (Preferred)
+
+you recomend me the stack
+
+
+
+### 2. Core Features
+
+- URL Shortening: Generate a unique, short, 6-character hash for any valid long URL.
+
+- Custom Aliases: Allow users to specify a custom back-half (e.g., site.com/my-custom-name).
+
+- High-Speed Redirects: Fast 301/302 redirection handling with minimal latency.
+
+
+
+### 3. Advanced Features ("Rich Features")
+
+- Advanced Analytics Dashboard: Track total clicks, unique visitors, top referrers (social media, direct, etc.), geographical location (countries/cities), and device/browser types.
+
+- Dynamic QR Code Generator: Automatically generate a downloadable QR code for every shortened link.
+
+- Link Management: 
+
+  - Link Expiration: Set a specific expiration date and time, or a maximum click limit after which the link deactivates.
+
+  - Password Protection: Optional password restriction before redirecting to the destination URL.
+
+  - Title & Description Scraping: Automatically fetch the destination page's meta title and description to display in the user's history.
+
+- UTM Builder: An integrated tool to easily add UTM parameters (source, medium, campaign) to the long URL before shortening.
+
+- Bulk Shortening: Allow users to input multiple URLs at once (one per line) and generate short links in bulk.
+
+
+
+### 4. User System & Security
+
+- Authentication: NextAuth.js or Clerk (Google, GitHub, and Email/Password login).
+
+- User Dashboard: A clean interface to view history, manage active/expired links, and view individual link analytics.
+
+- Guest Mode: Anonymous users can shorten links, but their links expire in 24 hours, and they cannot access advanced analytics.
+
+- Anti-Abuse & Rate Limiting: Implement basic rate limiting per IP address to prevent spam. Validate URLs against phishing/malware patterns.
+
+
+
+### 5. UI/UX Design Guidelines
+
+- Modern, clean, and minimalist aesthetic with a dashboard layout.
+
+- Toggleable Dark/Light mode.
+
+- High accessibility (scannable layouts, clear feedback states, and loading skeletons).
+
+- Copy-to-clipboard buttons with active toast notifications ("Link Copied!").
+
+
+

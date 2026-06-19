@@ -1,0 +1,17 @@
+# Offline phishing/malware host blocklist (ARCHITECTURE.md §4.5, FR-36, AC-44).
+# One host per line; comments start with '#'. Matching is case-insensitive and
+# covers subdomains (a parent-domain entry blocks its subdomains).
+#
+# The entries below include canonical "known bad" test hosts so AC-44 is
+# verifiable fully offline. Extend with real feeds (e.g. exported URLhaus /
+# PhishTank host lists) as needed — keep it a plain newline file.
+
+# --- Standard test/reserved domains used for offline verification ---
+malware.testing.google.test
+phishing.example.com
+malware.example.com
+
+# --- Illustrative known-abused shorteners/hosts (sample, offline) ---
+known-phishing-site.test
+definitely-malware.test
+evil-bank-login.test
