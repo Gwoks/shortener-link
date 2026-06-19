@@ -1,0 +1,55 @@
+[package]
+name = "shortener"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "shortener"
+path = "src/main.rs"
+
+[[bin]]
+name = "seed"
+path = "src/bin/seed.rs"
+
+[dependencies]
+# web
+axum = { version = "0.7", features = ["macros"] }
+tokio = { version = "1", features = ["full"] }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["fs", "trace", "compression-gzip", "cors"] }
+# serde
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# db
+sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio", "sqlite", "macros", "migrate", "chrono"] }
+chrono = { version = "0.4", features = ["serde"] }
+# auth
+jsonwebtoken = "9"
+argon2 = "0.5"
+oauth2 = "4.4"
+# http client (rustls to avoid OpenSSL system dep)
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+# scraping / qr / geo
+scraper = "0.20"
+qrcode = "0.14"
+image = { version = "0.25", default-features = false, features = ["png"] }
+maxminddb = "0.24"
+# infra
+governor = "0.6"
+moka = { version = "0.12", features = ["future"] }
+cuid = "1"
+url = "2"
+# util
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+thiserror = "1"
+anyhow = "1"
+rand = "0.8"
+sha2 = "0.10"
+hex = "0.4"
+base64 = "0.22"
+
+[dev-dependencies]
+tower = { version = "0.5", features = ["util"] }
+http-body-util = "0.1"
+tempfile = "3"
