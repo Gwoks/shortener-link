@@ -8,7 +8,7 @@
  * are fully wired here.
  */
 import { BarChart3, Copy, MoreVertical, Pencil, QrCode, Trash2 } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useNavigate } from 'react-router-dom'
 import { useCallback } from 'react'
 import type { LinkResource } from '../lib/types'
 import { Button } from '../ui/button'
@@ -54,7 +54,7 @@ export function LinkRowActions({
   /** Opens the shared delete-confirm dialog for this link. */
   onDelete: (link: LinkResource) => void
 }) {
-  const router = useRouter()
+  const navigate = useNavigate()
   const { success, error } = useToast()
 
   const editHref = `/dashboard/links/${link.id}`
@@ -75,15 +75,15 @@ export function LinkRowActions({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onSelect={() => router.push(editHref)}>
+        <DropdownMenuItem onSelect={() => navigate(editHref)}>
           <Pencil className="h-4 w-4" aria-hidden="true" />
           Edit
         </DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => router.push(qrHref)}>
+        <DropdownMenuItem onSelect={() => navigate(qrHref)}>
           <QrCode className="h-4 w-4" aria-hidden="true" />
           QR code
         </DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => router.push(analyticsHref)}>
+        <DropdownMenuItem onSelect={() => navigate(analyticsHref)}>
           <BarChart3 className="h-4 w-4" aria-hidden="true" />
           Analytics
         </DropdownMenuItem>

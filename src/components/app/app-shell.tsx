@@ -8,14 +8,13 @@
  * (title + contextual actions) as the first block of its content column.
  *
  * A skip-to-content link is the first focusable element (a11y, DESIGN §4.7/§6).
- * Routes follow ARCHITECTURE §3.2; sign-out uses next-auth `signOut`.
+ * Routes follow ARCHITECTURE §3.2; sign-out uses the SPA auth client.
  */
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { LogOut, Menu as MenuIcon, Plus, X } from 'lucide-react'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { Link, useLocation } from 'react-router-dom'
 import { useEffect, useState } from 'react'
-import { signOut } from 'next-auth/react'
+import { signOut } from '@/auth/auth-client'
 import { cn } from '../lib/cn'
 import { Button } from '../ui/button'
 import {
@@ -41,7 +40,7 @@ const SKIP_TARGET_ID = 'app-main-content'
 function Wordmark({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <Link
-      href="/dashboard"
+      to="/dashboard"
       onClick={onNavigate}
       className="flex items-center gap-2 rounded-sm text-h4 font-bold tracking-tight text-text-primary"
     >
@@ -65,7 +64,7 @@ function NavList({ pathname, onNavigate }: { pathname: string; onNavigate?: () =
         return (
           <Link
             key={item.href}
-            href={item.href}
+            to={item.href}
             onClick={onNavigate}
             aria-current={active ? 'page' : undefined}
             className={cn(
@@ -119,7 +118,7 @@ function UserMenu({ user }: { user: ShellUser }) {
           <ThemeToggle />
         </div>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={() => signOut({ callbackUrl: '/' })} destructive>
+        <DropdownMenuItem onSelect={() => void signOut()} destructive>
           <LogOut className="h-4 w-4" aria-hidden="true" />
           Sign out
         </DropdownMenuItem>
@@ -145,7 +144,7 @@ function SidebarBody({
       </div>
       <div className="px-3 pb-2">
         <Button asChild className="w-full justify-center">
-          <Link href="/dashboard/new" onClick={onNavigate}>
+          <Link to="/dashboard/new" onClick={onNavigate}>
             <Plus className="h-4 w-4" aria-hidden="true" />
             New link
           </Link>
@@ -203,7 +202,7 @@ function MobileDrawer({ user, pathname }: { user: ShellUser; pathname: string })
 }
 
 export function AppShell({ user, children }: { user: ShellUser; children: React.ReactNode }) {
-  const pathname = usePathname()
+  const pathname = useLocation().pathname
 
   return (
     <div className="min-h-screen bg-canvas">

@@ -9,7 +9,7 @@
  * propagation.
  */
 import { ExternalLink } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useNavigate } from 'react-router-dom'
 import { absoluteTime, displayDestination, formatNumber, relativeTime } from '../lib/format'
 import type { LinkResource } from '../lib/types'
 import { LinkStatusBadges } from '../ui/status-badge'
@@ -23,7 +23,7 @@ export function LinkCard({
   link: LinkResource
   onDelete: (link: LinkResource) => void
 }) {
-  const router = useRouter()
+  const navigate = useNavigate()
   const analyticsHref = `/dashboard/links/${link.id}/analytics`
 
   return (
@@ -33,13 +33,13 @@ export function LinkCard({
       aria-label={`${link.shortUrl}, ${formatNumber(link.clickCount)} clicks`}
       onClick={(e) => {
         if ((e.target as HTMLElement).closest('a,button,[role="menuitem"]')) return
-        router.push(analyticsHref)
+        navigate(analyticsHref)
       }}
       onKeyDown={(e) => {
         if (e.target !== e.currentTarget) return
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault()
-          router.push(analyticsHref)
+          navigate(analyticsHref)
         }
       }}
       className="cursor-pointer rounded-md border border-border bg-surface p-4 transition-colors hover:bg-surface-hover focus-visible:bg-surface-hover"

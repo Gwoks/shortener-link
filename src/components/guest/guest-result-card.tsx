@@ -15,7 +15,7 @@
  * session) — the only conversion path is the sign-up line.
  */
 import { Clock, ExternalLink, X } from 'lucide-react'
-import Link from 'next/link'
+import { Link } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 import { qrUrlForCode } from '../lib/api'
 import { absoluteTime, displayDestination, relativeTime } from '../lib/format'
@@ -127,7 +127,7 @@ export function GuestResultCard({
       <p className="text-body-sm text-text-secondary">
         Want it permanent with full analytics?{' '}
         <Link
-          href="/signin?mode=signup"
+          to="/signin?mode=signup"
           className="rounded-sm font-medium text-accent underline-offset-4 hover:underline"
         >
           Sign up

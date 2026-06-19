@@ -9,7 +9,7 @@
  * keyboard-focusable link to per-link analytics (Enter opens it).
  */
 import { ArrowDown, ArrowUp, ArrowUpDown, ExternalLink } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useNavigate } from 'react-router-dom'
 import { cn } from '../lib/cn'
 import { absoluteTime, displayDestination, formatNumber, relativeTime } from '../lib/format'
 import type { LinkResource } from '../lib/types'
@@ -62,7 +62,7 @@ export function LinksTable({
   onSortChange: (sort: SortKey) => void
   onDelete: (link: LinkResource) => void
 }) {
-  const router = useRouter()
+  const navigate = useNavigate()
 
   return (
     <div className="overflow-hidden rounded-md border border-border bg-surface">
@@ -106,13 +106,13 @@ export function LinksTable({
                 onClick={(e) => {
                   // Ignore clicks that originate from interactive controls in the row.
                   if ((e.target as HTMLElement).closest('a,button,[role="menuitem"]')) return
-                  router.push(analyticsHref)
+                  navigate(analyticsHref)
                 }}
                 onKeyDown={(e) => {
                   if (e.target !== e.currentTarget) return
                   if (e.key === 'Enter') {
                     e.preventDefault()
-                    router.push(analyticsHref)
+                    navigate(analyticsHref)
                   }
                 }}
                 className="group cursor-pointer border-b border-border last:border-b-0 transition-colors hover:bg-surface-hover focus-visible:bg-surface-hover"

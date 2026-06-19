@@ -9,7 +9,7 @@
  * another or jump to the dashboard.
  */
 import { CheckCircle2, ExternalLink, Plus } from 'lucide-react'
-import Link from 'next/link'
+import { Link } from 'react-router-dom'
 import { useState } from 'react'
 import { qrUrlForId } from '../lib/api'
 import { displayDestination } from '../lib/format'
@@ -92,10 +92,10 @@ export function LinkResultCard({
           Create another
         </Button>
         <Button asChild variant="secondary">
-          <Link href={`/dashboard/links/${link.id}`}>Edit this link</Link>
+          <Link to={`/dashboard/links/${link.id}`}>Edit this link</Link>
         </Button>
         <Button asChild variant="ghost">
-          <Link href="/dashboard">Back to links</Link>
+          <Link to="/dashboard">Back to links</Link>
         </Button>
       </div>
 

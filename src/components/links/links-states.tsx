@@ -8,7 +8,7 @@
  * real content so the layout doesn't jump.
  */
 import { AlertTriangle, LinkIcon, Plus, SearchX } from 'lucide-react'
-import Link from 'next/link'
+import { Link } from 'react-router-dom'
 import { Button } from '../ui/button'
 import { Skeleton } from '../ui/skeleton'
 
@@ -86,7 +86,7 @@ export function LinksEmptyState() {
         expiry.
       </p>
       <Button asChild className="mt-5">
-        <Link href="/dashboard/new">
+        <Link to="/dashboard/new">
           <Plus className="h-4 w-4" aria-hidden="true" />
           New link
         </Link>

@@ -17,7 +17,6 @@
  */
 import { ExternalLink, Sparkles } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { api, ApiError } from '../lib/api'
 import { displayDestination, relativeTime } from '../lib/format'
 import type { LinkResource } from '../lib/types'
@@ -33,7 +32,6 @@ export function GuestClaimPrompt({
 }: {
   onClaimed?: (claimed: number) => void
 }) {
-  const router = useRouter()
   const { success, error: toastError } = useToast()
 
   const [links, setLinks] = useState<LinkResource[]>([])
@@ -91,9 +89,9 @@ export function GuestClaimPrompt({
         claimed === 1 ? 'Link claimed' : `${claimed} links claimed`,
         'They’re now in your account and no longer expire.',
       )
+      // The parent refetches its list via onClaimed so the dashboard reflects
+      // the newly owned links.
       onClaimed?.(claimed)
-      // Refresh so the dashboard list reflects the newly owned links.
-      router.refresh()
     } catch (err) {
       const message =
         err instanceof ApiError ? err.message : 'Could not claim your links. Please try again.'
