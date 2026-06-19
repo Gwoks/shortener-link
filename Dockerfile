@@ -16,6 +16,8 @@ RUN if [ -f pnpm-lock.yaml ]; then pnpm install --frozen-lockfile; else pnpm ins
 FROM node:20-bookworm-slim AS builder
 WORKDIR /app
 RUN corepack enable
+# Prisma's engines need OpenSSL; the slim base image omits it.
+RUN apt-get update -y && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN pnpm prisma generate
@@ -26,6 +28,8 @@ FROM node:20-bookworm-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 RUN corepack enable
+# Prisma's schema/query engines need OpenSSL at runtime (migrate + queries).
+RUN apt-get update -y && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 
 # Copy the full app (we run `next start` and the tsx worker, plus prisma CLI for
 # migrate/seed in the entrypoint, so we keep node_modules + sources).
