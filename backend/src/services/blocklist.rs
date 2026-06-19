@@ -55,7 +55,11 @@ static BLOCKLIST: OnceLock<HashSet<String>> = OnceLock::new();
 /// falling back to an empty set when absent or unreadable.
 fn load_set() -> &'static HashSet<String> {
     BLOCKLIST.get_or_init(|| {
-        let path = std::path::Path::new("data").join("blocklist.txt");
+        // `BLOCKLIST_PATH` overrides the default so the binary isn't tied to a CWD.
+        let path = match std::env::var("BLOCKLIST_PATH") {
+            Ok(p) if !p.is_empty() => std::path::PathBuf::from(p),
+            _ => std::path::Path::new("data").join("blocklist.txt"),
+        };
         match std::fs::read_to_string(&path) {
             Ok(text) => parse_blocklist(&text),
             Err(_) => HashSet::new(),
