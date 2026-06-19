@@ -3,10 +3,12 @@
 //! cores; the route/worker layers (later phases) wire these together.
 
 pub mod alias;
+pub mod analytics;
 pub mod blocklist;
 pub mod cache;
 pub mod clicker_pages;
 pub mod geo;
+pub mod links;
 pub mod qr;
 pub mod ratelimit;
 pub mod redirect;
