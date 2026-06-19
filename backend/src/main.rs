@@ -6,6 +6,7 @@ use shortener::routes;
 use shortener::services::cache::Cache;
 use shortener::services::ratelimit::Limiter;
 use shortener::state::AppState;
+use shortener::tasks;
 use shortener::db;
 
 #[tokio::main]
@@ -39,24 +40,31 @@ async fn main() -> anyhow::Result<()> {
     };
 
     let cache = Cache::new(cfg.redirect_cache_ttl, cfg.redirect_negative_cache_ttl, 10_000);
-    let (click_tx, mut click_rx, scrape_tx, mut scrape_rx) = queue::channels();
-
-    // TODO Phase 6: replace these drains with the real click/scrape consumers.
-    // For now we drain both channels so the senders never error (channel open).
-    tokio::spawn(async move {
-        while click_rx.recv().await.is_some() {}
-    });
-    tokio::spawn(async move {
-        while scrape_rx.recv().await.is_some() {}
-    });
+    let (click_tx, click_rx, scrape_tx, scrape_rx) = queue::channels();
 
     let cfg = Arc::new(cfg);
+    // Share the GeoIP reader between the click-ingest task and AppState.
+    let geo_arc = Arc::new(geo);
+
+    // Real background consumers (Phase 6) replacing the channel drains:
+    //  - click ingest is the SINGLE writer for clicks (no lock contention);
+    //  - scraper performs SSRF-safe metadata fetches;
+    //  - sweep runs the expiry/retention/guest-purge loop.
+    tokio::spawn(tasks::click_ingest::run(
+        pool.clone(),
+        cfg.clone(),
+        geo_arc.clone(),
+        click_rx,
+    ));
+    tokio::spawn(tasks::scraper::run(pool.clone(), cfg.clone(), scrape_rx));
+    tokio::spawn(tasks::sweep::run(pool.clone(), cfg.clone()));
+
     let state = AppState {
         pool,
         cfg: cfg.clone(),
         cache: Arc::new(cache),
         limiter: Arc::new(Limiter::new()),
-        geo: Arc::new(geo),
+        geo: geo_arc,
         click_tx,
         scrape_tx,
     };
