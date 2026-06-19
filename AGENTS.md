@@ -47,6 +47,19 @@ cp -rf source dest          # NOT: cp -r source dest
 - `apt-get` - use `-y` flag
 - `brew` - use `HOMEBREW_NO_AUTO_UPDATE=1` env var
 
+## NEVER Run Blocking / Long-Running Foreground Processes
+
+Agents run under a watchdog that **kills** a task making no progress (~180s). NEVER start a process that does not return on its own — this is what killed the first build agent:
+
+- ❌ `next dev`, `npm run dev`, any `*:dev` / `*:watch` (file watchers never exit)
+- ❌ `docker compose up` (without `-d`), `next start`, any bare foreground server
+- ❌ `playwright test` against a server you started in the same shell
+- ❌ `vitest` (watch mode) — use `vitest run`
+
+To verify work, use ONE-SHOT commands that exit on their own:
+`pnpm typecheck`, `pnpm lint`, `pnpm build`, `pnpm vitest run`, `pnpm exec prisma generate`.
+If you genuinely need a running server, start it detached (`&` or `-d`) with a health-check loop bounded by a timeout, then tear it down — never block on it.
+
 <!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:7510c1e2 -->
 ## Beads Issue Tracker
 
