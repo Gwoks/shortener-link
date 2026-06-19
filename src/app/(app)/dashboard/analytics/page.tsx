@@ -1,16 +1,12 @@
 /**
- * Aggregate analytics (ARCHITECTURE §3.2, FR-8). Charts + accessible tables land
- * in a later pipeline slice. Placeholder keeps the Analytics nav item live.
+ * Aggregate analytics route (ARCHITECTURE §3.2, DESIGN §5.8, FR-8). Mounts the
+ * client controller, which sums clicks/uniques/top-links across the user's links
+ * via the summary endpoint and pairs each chart with an accessible table (AC-49).
  */
-import { BarChart3 } from 'lucide-react'
-import { ComingSoon } from '@/components/app/coming-soon'
+import { SummaryAnalyticsPage } from '@/components/analytics/summary-analytics-page'
 
-export default function AnalyticsPage() {
-  return (
-    <ComingSoon
-      title="Analytics"
-      description="Clicks over time, top links, referrers, geo, and device breakdowns — each paired with an accessible table — arrive in an upcoming slice."
-      icon={BarChart3}
-    />
-  )
+export const dynamic = 'force-dynamic'
+
+export default function AnalyticsRoute() {
+  return <SummaryAnalyticsPage />
 }

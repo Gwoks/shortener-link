@@ -1,17 +1,12 @@
 /**
- * Per-link analytics (ARCHITECTURE §3.2, FR-7). Charts + accessible tables land
- * in a later pipeline slice. Placeholder keeps row "Analytics" and the row-click
- * navigation working from the list.
+ * Per-link analytics route (ARCHITECTURE §3.2, DESIGN §5.7, FR-7). Mounts the
+ * client analytics controller, which loads the link + breakdowns via the typed
+ * api client and renders charts each paired with an accessible table (AC-49).
  */
-import { BarChart3 } from 'lucide-react'
-import { ComingSoon } from '@/components/app/coming-soon'
+import { LinkAnalyticsPage } from '@/components/analytics/link-analytics-page'
 
-export default function LinkAnalyticsPage() {
-  return (
-    <ComingSoon
-      title="Link analytics"
-      description="Per-link clicks over time, referrers, geo, and device breakdowns arrive in an upcoming slice."
-      icon={BarChart3}
-    />
-  )
+export const dynamic = 'force-dynamic'
+
+export default function LinkAnalyticsRoute({ params }: { params: { id: string } }) {
+  return <LinkAnalyticsPage id={params.id} />
 }
