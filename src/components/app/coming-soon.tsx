@@ -4,7 +4,7 @@
  * fully navigable now — no dead 404s inside the shell — while clearly signalling
  * the screen is not yet built. Uses the same tokens as real screens.
  */
-import Link from 'next/link'
+import { Link } from 'react-router-dom'
 import { ArrowLeft, type LucideIcon } from 'lucide-react'
 import { PageHeader } from './app-shell'
 
@@ -31,7 +31,7 @@ export function ComingSoon({
         <h3 className="text-h4 text-text-primary">{title} is coming soon</h3>
         <p className="mt-1.5 max-w-sm text-body-sm text-text-secondary">{description}</p>
         <Link
-          href={backHref}
+          to={backHref}
           className="mt-5 inline-flex items-center gap-1.5 rounded-sm text-body-sm font-medium text-accent hover:underline"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />

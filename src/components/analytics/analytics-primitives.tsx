@@ -7,7 +7,7 @@
  * state when there is not enough data (AC-16), and supports loading/error surfaces
  * (USER-JOURNEY §4.6). All purely presentational except the table toggle state.
  */
-import Link from 'next/link'
+import { Link } from 'react-router-dom'
 import { AlertTriangle, BarChart3, Table2, type LucideIcon } from 'lucide-react'
 import { useId, useState } from 'react'
 import { cn } from '../lib/cn'
@@ -261,7 +261,7 @@ export function AnalyticsEmptyState({
       <p className="mt-1.5 max-w-sm text-body-sm text-text-secondary">{description}</p>
       {cta && (
         <Button asChild className="mt-5">
-          <Link href={cta.href}>{cta.label}</Link>
+          <Link to={cta.href}>{cta.label}</Link>
         </Button>
       )}
     </div>

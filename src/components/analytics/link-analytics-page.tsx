@@ -18,7 +18,7 @@ import {
   QrCode,
   Users,
 } from 'lucide-react'
-import Link from 'next/link'
+import { Link } from 'react-router-dom'
 import { useCallback, useEffect, useState } from 'react'
 import { PageHeader } from '../app/app-shell'
 import { api, ApiError } from '../lib/api'
@@ -141,7 +141,7 @@ export function LinkAnalyticsPage({ id }: { id: string }) {
               </Button>
             )}
             <Button asChild variant={linkState.notFound ? 'primary' : 'ghost'}>
-              <Link href="/dashboard">Back to links</Link>
+              <Link to="/dashboard">Back to links</Link>
             </Button>
           </div>
         </div>
@@ -164,10 +164,10 @@ export function LinkAnalyticsPage({ id }: { id: string }) {
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <Button asChild variant="secondary" size="sm">
-              <Link href={`/dashboard/links/${link.id}`}>Edit</Link>
+              <Link to={`/dashboard/links/${link.id}`}>Edit</Link>
             </Button>
             <Button asChild variant="secondary" size="sm">
-              <Link href={`/dashboard/links/${link.id}?qr=1`}>
+              <Link to={`/dashboard/links/${link.id}?qr=1`}>
                 <QrCode className="h-4 w-4" aria-hidden="true" />
                 QR
               </Link>
@@ -251,7 +251,7 @@ function GuestBasicAnalytics({ link }: { link: LinkResource }) {
           This is a guest link, so only the basic click count is tracked. Sign-in features like
           unique visitors, clicks over time, referrers, geography, and device breakdowns aren’t
           available for guest links.{' '}
-          <Link href="/signup" className="font-medium text-accent hover:underline">
+          <Link to="/signup" className="font-medium text-accent hover:underline">
             Create an account
           </Link>{' '}
           to get full analytics on new links.
@@ -428,14 +428,14 @@ function BackLink() {
   return (
     <div className="mb-2 flex items-center gap-2 text-body-sm">
       <Link
-        href="/dashboard"
+        to="/dashboard"
         className="inline-flex items-center gap-1.5 rounded-sm text-text-secondary transition-colors hover:text-text-primary"
       >
         <ArrowLeft className="h-4 w-4" aria-hidden="true" />
         Links
       </Link>
       <Link
-        href="/dashboard/analytics"
+        to="/dashboard/analytics"
         className="inline-flex items-center gap-1.5 rounded-sm text-text-tertiary transition-colors hover:text-text-primary"
       >
         <BarChart3 className="h-3.5 w-3.5" aria-hidden="true" />

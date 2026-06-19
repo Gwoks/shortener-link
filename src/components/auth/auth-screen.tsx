@@ -21,10 +21,10 @@
  * with aria-label). Errors are announced via role=alert (assertive).
  */
 import { Eye, EyeOff } from 'lucide-react'
-import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { getProviders, signIn } from 'next-auth/react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useAuth } from '@/auth/auth-context'
+import { getProviders, signInCredentials, signInOAuth } from '@/auth/auth-client'
 import { api, ApiError } from '../lib/api'
 import { Button } from '../ui/button'
 import { Input, Label } from '../ui/input'
@@ -55,8 +55,9 @@ const STRENGTH_BAR: Record<0 | 1 | 2 | 3, string> = {
 }
 
 export function AuthScreen() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
+  const navigate = useNavigate()
+  const { refresh } = useAuth()
+  const [searchParams] = useSearchParams()
 
   const callbackUrl = searchParams.get('callbackUrl') || '/dashboard'
   const initialMode: Mode = searchParams.get('mode') === 'signup' ? 'signup' : 'signin'
@@ -110,23 +111,23 @@ export function AuthScreen() {
       setError(null)
       setOauthBusy(provider)
       try {
-        // Full redirect to the provider; on return Auth.js sends the user to
+        // Full redirect to the provider; on return the backend sends the user to
         // callbackUrl. We never reach the line after this on success.
-        await signIn(provider, { redirectTo: callbackUrl })
+        signInOAuth(provider)
       } catch {
         setOauthBusy(null)
         setError('Could not start sign-in with that provider. Please try again.')
       }
     },
-    [callbackUrl],
+    [],
   )
 
-  const finishWithSession = useCallback(() => {
-    // Successful credential sign-in: navigate to the intended destination and
-    // refresh so server components pick up the new session.
-    router.push(callbackUrl)
-    router.refresh()
-  }, [callbackUrl, router])
+  const finishWithSession = useCallback(async () => {
+    // Successful credential sign-in: refresh the client session, then navigate to
+    // the intended destination.
+    await refresh()
+    navigate(callbackUrl)
+  }, [callbackUrl, navigate, refresh])
 
   const onSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -172,13 +173,9 @@ export function AuthScreen() {
           }
         }
 
-        const res = await signIn('credentials', {
-          email: trimmedEmail,
-          password,
-          redirect: false,
-        })
-
-        if (!res || res.error) {
+        try {
+          await signInCredentials(trimmedEmail, password)
+        } catch {
           setError(
             mode === 'signup'
               ? 'Your account was created, but automatic sign-in failed. Try signing in.'
@@ -188,7 +185,7 @@ export function AuthScreen() {
           return
         }
 
-        finishWithSession()
+        await finishWithSession()
       } catch {
         setError('Something went wrong. Please try again.')
         setSubmitting(false)
@@ -412,7 +409,7 @@ export function AuthScreen() {
       </div>
 
       <p className="mt-4 text-center text-caption text-text-tertiary">
-        <Link href="/" className="rounded-sm underline-offset-4 hover:text-text-secondary hover:underline">
+        <Link to="/" className="rounded-sm underline-offset-4 hover:text-text-secondary hover:underline">
           ← Back to home
         </Link>
       </p>

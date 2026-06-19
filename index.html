@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Link Shortener</title>
+    <!-- Applies the stored/system theme before paint to prevent a theme flash (AC-46). -->
+    <script>
+      (function () {
+        try {
+          var k = 'tess-theme'
+          var p = localStorage.getItem(k) || 'system'
+          var dark = p === 'dark' || (p === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+          var root = document.documentElement
+          if (dark) {
+            root.classList.add('dark')
+            root.style.colorScheme = 'dark'
+          } else {
+            root.style.colorScheme = 'light'
+          }
+        } catch (e) {}
+      })()
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

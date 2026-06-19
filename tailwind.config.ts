@@ -8,7 +8,7 @@ import type { Config } from 'tailwindcss'
 
 const config: Config = {
   darkMode: 'class',
-  content: ['./src/app/**/*.{ts,tsx}', './src/components/**/*.{ts,tsx}'],
+  content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     // Spacing scale (4px base, DESIGN §2.5) — extends Tailwind defaults.
     extend: {

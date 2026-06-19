@@ -10,14 +10,14 @@
  * Kept presentational and prop-driven (no session read here) so it works in both
  * server-rendered pages (which resolve the session once) and the auth screens.
  */
-import Link from 'next/link'
+import { Link } from 'react-router-dom'
 import { ThemeToggle } from '../app/theme-toggle'
 import { Button } from '../ui/button'
 
 function Wordmark() {
   return (
     <Link
-      href="/"
+      to="/"
       className="flex items-center gap-2 rounded-sm text-h4 font-bold tracking-tight text-text-primary"
     >
       <span
@@ -46,15 +46,15 @@ export function PublicTopBar({
         {showAuthLinks &&
           (authenticated ? (
             <Button asChild size="sm">
-              <Link href="/dashboard">Go to dashboard</Link>
+              <Link to="/dashboard">Go to dashboard</Link>
             </Button>
           ) : (
             <>
               <Button asChild variant="ghost" size="sm">
-                <Link href="/signin">Sign in</Link>
+                <Link to="/signin">Sign in</Link>
               </Button>
               <Button asChild variant="secondary" size="sm" className="hidden sm:inline-flex">
-                <Link href="/signin?mode=signup">Sign up</Link>
+                <Link to="/signin?mode=signup">Sign up</Link>
               </Button>
             </>
           ))}

@@ -16,7 +16,7 @@ import {
   ToggleRight,
   Users,
 } from 'lucide-react'
-import Link from 'next/link'
+import { Link } from 'react-router-dom'
 import { useCallback, useEffect, useState } from 'react'
 import { PageHeader } from '../app/app-shell'
 import { api, ApiError } from '../lib/api'
@@ -257,7 +257,7 @@ function TopLinksCard({
               header: 'Link',
               render: (l) => (
                 <Link
-                  href={`/dashboard/links/${l.linkId}/analytics`}
+                  to={`/dashboard/links/${l.linkId}/analytics`}
                   className="inline-flex items-center gap-1 font-mono text-accent hover:underline"
                 >
                   /{l.code}

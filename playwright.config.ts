@@ -1,10 +1,10 @@
 import { defineConfig, devices } from '@playwright/test'
 
-const BASE_URL = process.env.E2E_BASE_URL || 'http://localhost:3000'
+const BASE_URL = process.env.E2E_BASE_URL || 'http://localhost:8080'
 
-// E2E is owned/exercised by QA against the docker-compose stack (AC-52).
-// We do not auto-start a webServer here so QA can point at an already-running
-// stack via E2E_BASE_URL; set START_WEB=1 to have Playwright boot `pnpm start`.
+// E2E runs against the single Rust binary (API + /:code redirect + static SPA).
+// By default Playwright boots it via scripts/e2e-server.sh (build + seed temp DB
+// + serve). Set NO_WEB_SERVER=1 to point at an already-running stack via E2E_BASE_URL.
 export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: true,
@@ -19,14 +19,14 @@ export default defineConfig({
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
     { name: 'mobile', use: { ...devices['Pixel 5'] } },
   ],
-  ...(process.env.START_WEB
-    ? {
+  ...(process.env.NO_WEB_SERVER
+    ? {}
+    : {
         webServer: {
-          command: 'pnpm start',
-          url: BASE_URL,
+          command: 'bash scripts/e2e-server.sh',
+          url: `${BASE_URL}/api/healthz`,
           reuseExistingServer: !process.env.CI,
           timeout: 120_000,
         },
-      }
-    : {}),
+      }),
 })

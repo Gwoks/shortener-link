@@ -7,8 +7,7 @@
  * success) without navigating away, so the user can copy/QR or create another.
  */
 import { ArrowLeft } from 'lucide-react'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import { PageHeader } from '../app/app-shell'
 import type { LinkResource } from '../lib/types'
@@ -16,7 +15,7 @@ import { LinkForm } from './link-form'
 import { LinkResultCard } from './link-result-card'
 
 export function CreateLinkPage() {
-  const router = useRouter()
+  const navigate = useNavigate()
   const [created, setCreated] = useState<LinkResource | null>(null)
   // Bump to remount the form for a clean "create another".
   const [formKey, setFormKey] = useState(0)
@@ -25,7 +24,7 @@ export function CreateLinkPage() {
     <div>
       <div className="mb-2">
         <Link
-          href="/dashboard"
+          to="/dashboard"
           className="inline-flex items-center gap-1.5 rounded-sm text-body-sm text-text-secondary transition-colors hover:text-text-primary"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
@@ -52,7 +51,7 @@ export function CreateLinkPage() {
               key={formKey}
               mode="create"
               onCreated={(link) => setCreated(link)}
-              onCancel={() => router.push('/dashboard')}
+              onCancel={() => navigate('/dashboard')}
             />
           </div>
         )}

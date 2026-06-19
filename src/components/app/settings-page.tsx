@@ -14,7 +14,7 @@
  */
 import { LogOut, Palette, ShieldCheck, UserRound } from 'lucide-react'
 import { useCallback, useState } from 'react'
-import { signOut } from 'next-auth/react'
+import { signOut } from '@/auth/auth-client'
 import { PageHeader } from './app-shell'
 import { ThemeToggle } from './theme-toggle'
 import { Avatar } from './avatar'
@@ -65,7 +65,7 @@ export function SettingsPage({ user }: { user: SettingsUser }) {
 
   const onSignOut = useCallback(() => {
     setSigningOut(true)
-    void signOut({ callbackUrl: '/' })
+    void signOut()
   }, [])
 
   return (

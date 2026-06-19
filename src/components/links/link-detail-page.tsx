@@ -8,8 +8,7 @@
  * offers Copy/QR header actions. Covers loading, error, not-found, and forbidden.
  */
 import { AlertTriangle, ArrowLeft, BarChart3, Lock, QrCode } from 'lucide-react'
-import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { PageHeader } from '../app/app-shell'
 import { api, ApiError } from '../lib/api'
@@ -28,8 +27,8 @@ type LoadState =
   | { phase: 'ready'; link: LinkResource }
 
 export function LinkDetailPage({ id }: { id: string }) {
-  const router = useRouter()
-  const searchParams = useSearchParams()
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [state, setState] = useState<LoadState>({ phase: 'loading' })
   const [qrOpen, setQrOpen] = useState(false)
   // Only auto-open the QR modal once per mount (from the ?qr=1 deep link).
@@ -108,7 +107,7 @@ export function LinkDetailPage({ id }: { id: string }) {
               </Button>
             )}
             <Button asChild variant={state.notFound ? 'primary' : 'ghost'}>
-              <Link href="/dashboard">Back to links</Link>
+              <Link to="/dashboard">Back to links</Link>
             </Button>
           </div>
         </div>
@@ -132,7 +131,7 @@ export function LinkDetailPage({ id }: { id: string }) {
               QR code
             </Button>
             <Button asChild variant="secondary">
-              <Link href={`/dashboard/links/${link.id}/analytics`}>
+              <Link to={`/dashboard/links/${link.id}/analytics`}>
                 <BarChart3 className="h-4 w-4" aria-hidden="true" />
                 Analytics
               </Link>
@@ -174,8 +173,8 @@ export function LinkDetailPage({ id }: { id: string }) {
           <LinkForm
             mode="edit"
             link={link}
-            onUpdated={() => router.push('/dashboard')}
-            onCancel={() => router.push('/dashboard')}
+            onUpdated={() => navigate('/dashboard')}
+            onCancel={() => navigate('/dashboard')}
           />
         </div>
       </div>
@@ -195,7 +194,7 @@ function BackLink() {
   return (
     <div className="mb-2">
       <Link
-        href="/dashboard"
+        to="/dashboard"
         className="inline-flex items-center gap-1.5 rounded-sm text-body-sm text-text-secondary transition-colors hover:text-text-primary"
       >
         <ArrowLeft className="h-4 w-4" aria-hidden="true" />

@@ -1,21 +1,21 @@
 /**
  * E2E smoke for the redirect-side surfaces and API (AC-6/7/20/22/44/52). Runs
- * against a running stack (E2E_BASE_URL, default http://localhost:3000) — QA
- * points this at the docker-compose stack. These cover backend-observable
- * behavior; the frontend agent's suite covers UI fidelity.
+ * against the single Rust binary (E2E_BASE_URL, default http://localhost:8080),
+ * which serves the API, the /:code redirect, and the static SPA. These cover
+ * backend-observable behavior; the UI suite covers visual fidelity.
  *
  * Assumes the demo seed is present (demo01 active, demoex expired, demopw
  * password-protected with password "secret").
  */
 import { test, expect } from '@playwright/test'
 
-test('healthz reports ok with db + redis (AC-52)', async ({ request }) => {
+test('healthz reports ok with db (AC-52)', async ({ request }) => {
+  // Redis was removed in the Rust/SQLite migration; health now reports db only.
   const res = await request.get('/api/healthz')
   expect(res.status()).toBe(200)
   const body = await res.json()
   expect(body.status).toBe('ok')
   expect(body.db).toBe(true)
-  expect(body.redis).toBe(true)
 })
 
 test('active short link 302s to its destination with no-store (AC-6)', async ({ request }) => {

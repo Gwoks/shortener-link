@@ -8,8 +8,7 @@
  * cards, pagination, and the shared delete-confirm dialog.
  */
 import { Plus } from 'lucide-react'
-import Link from 'next/link'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { PageHeader } from '../app/app-shell'
 import { GuestClaimPrompt } from '../guest/claim-prompt'
@@ -44,9 +43,9 @@ type LoadState =
   | { phase: 'ready'; items: LinkResource[]; total: number }
 
 export function LinksPage() {
-  const router = useRouter()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
+  const navigate = useNavigate()
+  const pathname = useLocation().pathname
+  const [searchParams] = useSearchParams()
 
   // Seed query state from the URL once; thereafter we drive the URL from state.
   const initialQuery = useMemo(
@@ -98,7 +97,7 @@ export function LinksPage() {
   useEffect(() => {
     const sp = paramsFromQuery(query)
     const qs = sp.toString()
-    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false })
+    navigate(qs ? `${pathname}?${qs}` : pathname, { replace: true })
     void load(query)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, load])
@@ -151,7 +150,7 @@ export function LinksPage() {
 
   const headerActions = (
     <Button asChild>
-      <Link href="/dashboard/new">
+      <Link to="/dashboard/new">
         <Plus className="h-4 w-4" aria-hidden="true" />
         New link
       </Link>
