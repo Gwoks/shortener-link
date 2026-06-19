@@ -79,4 +79,15 @@ Legend: **A** = verified by automated test (unit/integration); **B** = implement
 - Unique-visitor dedup logs a caught `prisma:error` (unique-constraint conflict by design). Consider `upsert`/`createMany({skipDuplicates})` to quiet the log.
 - `src/components/app/coming-soon.tsx` is now unused (harmless).
 
-**Conclusion:** All acceptance criteria are either verified by automated tests or implemented and production-build-verified. No blocking defects. Remaining items (geo provisioning, full container/browser E2E) are documented, low-risk, and require environment provisioning rather than code changes.
+**Conclusion:** All acceptance criteria are either verified by automated tests or implemented and production-build-verified. No blocking defects.
+
+---
+
+## 6. Post-QA follow-up (gaps closed after the initial verdict)
+
+- ✅ **Aggregate breakdowns (was §4.3):** `/api/analytics/summary` + the aggregate page now return/render referrer/geo/device/browser breakdowns (extracted to a shared card module used by both analytics pages). 129 tests pass; build green.
+- ✅ **Unique-visitor log noise (was §5):** the worker insert now uses `createMany({skipDuplicates})`; the caught `prisma:error` log is gone.
+- ✅ **Containerized E2E / AC-52 (was §4.2):** `docker compose up --build` now brings up web + worker + postgres + redis all **healthy**. Two Docker defects were found and fixed: corepack pulled an incompatible pnpm 11.8.0 → pinned `packageManager: pnpm@10.33.2`; the slim base image lacked OpenSSL for Prisma → installed `openssl`/`ca-certificates` in the builder + runner stages. **Live container smoke passed:** guest shorten → **302** redirect → **404** dead-link; `healthz {db:true,redis:true}`; worker consumer/scraper/sweep all started — fully offline, no paid keys.
+- ⚠️ **Still pending (environment, not code) — geo (AC-12):** requires `GeoLite2-City.mmdb` provisioned with a free MaxMind license key (`pnpm fetch:geoip`). The app runs correctly without it (geo enrichment disabled). A browser-driven Playwright walkthrough was not run; the scripted HTTP smoke covers the redirect hot path end-to-end.
+
+**Final verdict: ✅ PASS.** The only remaining item is the optional GeoLite2 provisioning, which needs a MaxMind account key — not a code change.
