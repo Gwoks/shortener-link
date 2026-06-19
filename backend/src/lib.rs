@@ -3,6 +3,8 @@
 
 pub mod config;
 pub mod db;
+pub mod error;
 pub mod ids;
 pub mod models;
 pub mod seed;
+pub mod services;
