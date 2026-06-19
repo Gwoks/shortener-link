@@ -3,4 +3,4 @@ repos:
   additional:
     - "/Users/afghan/.beads-planning"
 
-sync.remote: "git+ssh://git@github.com/Gwoks/shortener-link.git"
+# sync.remote: "git+ssh://git@github.com/Gwoks/shortener-link.git"
