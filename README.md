@@ -223,6 +223,7 @@ ExecStart=/home/ubuntu/shortener-link/backend/target/release/shortener
 Environment="DATABASE_PATH=/home/ubuntu/shortener-link/data/app.db"
 Environment="STATIC_DIR=/home/ubuntu/shortener-link/dist"
 Environment="PUBLIC_PORT=8081"
+Environment="BASE_URL=https://url.yourdomain.com"
 Restart=unless-stopped
 RestartSec=5
 
@@ -244,7 +245,12 @@ server {
     index index.html;
 
     location / {
-        try_files $uri $uri/ /index.html;
+        proxy_pass http://127.0.0.1:8081/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
 
     location /api/ {
@@ -343,3 +349,4 @@ sudo certbot certificates
 ## License
 
 MIT
+
