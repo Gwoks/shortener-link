@@ -128,8 +128,9 @@ pub fn clear_cookie(name: &str) -> String {
 }
 
 /// Build the session Set-Cookie for the given token.
-pub fn session_cookie(token: &str) -> String {
-    build_cookie(SESSION_COOKIE, token, jwt::SESSION_TTL_SEC, false)
+/// Secure=true when behind a HTTPS proxy (identified via X-Forwarded-Proto).
+pub fn session_cookie(token: &str, secure: bool) -> String {
+    build_cookie(SESSION_COOKIE, token, jwt::SESSION_TTL_SEC, secure)
 }
 
 #[cfg(test)]
