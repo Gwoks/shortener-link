@@ -121,7 +121,7 @@ async fn register(
     let body = json!({ "user": { "id": id, "email": email, "name": name } });
     Ok(with_cookie(
         (StatusCode::CREATED, Json(body)).into_response(),
-        &session_cookie(&token),
+        &session_cookie(&token, true),
     ))
 }
 
@@ -173,7 +173,7 @@ async fn login(
     }});
     Ok(with_cookie(
         (StatusCode::OK, Json(body)).into_response(),
-        &session_cookie(&token),
+        &session_cookie(&token, true),
     ))
 }
 
@@ -264,7 +264,7 @@ async fn oauth_callback(
 
     let token = jwt::issue(&user, &state.cfg.auth_secret);
     // Set the session cookie, clear the transient state cookie.
-    let mut resp = redirect_to("/dashboard", Some(&session_cookie(&token)));
+    let mut resp = redirect_to("/dashboard", Some(&session_cookie(&token, true)));
     append_cookie(&mut resp, &clear_cookie(OAUTH_STATE_COOKIE));
     resp
 }
