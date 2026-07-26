@@ -26,7 +26,7 @@ Browser ─▶ [ Rust / Axum binary ]  ──▶  SQLite (data/app.db, WAL)
               ├─ /api/**            REST API (auth, links, analytics, qr, guest)
               ├─ /:code             redirect hot path (302 / password gate / dead-link)
               ├─ static + SPA       serves the built Vite bundle (dist/) with SPA fallback
-              └─ tokio tasks        click ingest · metadata scraper · expiry sweep
+              └─ tokio tasks       click ingest · metadata scraper · expiry sweep
 ```
 
 One binary holds the HTTP server, an in-memory redirect cache, an in-process rate limiter, the
@@ -131,7 +131,7 @@ backend/                    the Rust/Axum binary (the whole server)
   src/
     main.rs                 bootstrap: config, db, migrate, tasks, serve
     config.rs db.rs models.rs ids.rs state.rs queue.rs
-    error.rs                uniform API error envelope
+    error.rs               uniform API error envelope
     auth/                   argon2 + JWT session + Google/GitHub OAuth + extractors
     services/               ported business logic (links, analytics, redirect, cache,
                             ratelimit, ssrf, blocklist, referrer, ua, geo, qr, …)
@@ -160,3 +160,186 @@ docs/                       specs/plans (docs/superpowers) + behavioral contract
 | `pnpm backend:run` / `:seed` / `:build` / `:test` | run / seed / build / test the Rust backend |
 | `pnpm fetch:geoip` | download the GeoLite2 database (needs `MAXMIND_LICENSE_KEY`) |
 | `pnpm typecheck` / `pnpm e2e` | frontend typecheck / end-to-end tests |
+
+---
+
+## Deploy to VPS
+
+### Prerequisites
+
+| Requirement | Notes |
+|---|---|
+| VPS with public IPv4 | e.g. DigitalOcean, Hetzner, AWS EC2 |
+| Domain A record pointing to VPS IP | `url.yourdomain.com` → `<vps-ip>` |
+| Ports 80 and 443 open | `sudo ufw allow 80,443/tcp` |
+| Ubuntu 22.04+ | Other distros similar |
+
+### One-time server setup
+
+```bash
+# Install tools
+sudo apt update && sudo apt install -y nginx certbot python3-certbot-nginx curl git
+
+# Install Node.js
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+sudo apt install -y nodejs
+
+# Install pnpm
+sudo npm install -g pnpm
+
+# Install Rust
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+. "$HOME/.cargo/env"
+```
+
+### Manual deployment
+
+```bash
+# 1. Clone the repo
+git clone https://github.com/Gwoks/shortener-link /home/ubuntu/shortener-link
+cd /home/ubuntu/shortener-link
+
+# 2. Build frontend
+pnpm install && pnpm build
+
+# 3. Build backend
+cd backend && cargo build --release
+
+# 4. Create data dir
+sudo mkdir -p /home/ubuntu/shortener-link/data
+sudo chown -R $(whoami):$(id -gn) /home/ubuntu/shortener-link/data
+
+# 5. systemd service
+sudo tee /etc/systemd/system/shortener.service > /dev/null << 'EOF'
+[Unit]
+Description=URL Shortener API Server
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/shortener-link
+ExecStart=/home/ubuntu/shortener-link/backend/target/release/shortener
+Environment="DATABASE_PATH=/home/ubuntu/shortener-link/data/app.db"
+Environment="STATIC_DIR=/home/ubuntu/shortener-link/dist"
+Environment="PUBLIC_PORT=8081"
+Restart=unless-stopped
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable --now shortener
+
+# 6. nginx
+sudo tee /etc/nginx/sites-available/shortener > /dev/null << 'EOF'
+server {
+    listen 80;
+    listen [::]:80;
+    server_name url.yourdomain.com;
+
+    root /home/ubuntu/shortener-link/dist;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location /api/ {
+        proxy_pass http://127.0.0.1:8081/api/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+EOF
+
+sudo ln -sf /etc/nginx/sites-available/shortener /etc/nginx/sites-enabled/shortener
+sudo rm -f /etc/nginx/sites-enabled/default
+sudo nginx -t && sudo systemctl reload nginx
+
+# 7. SSL (no email required)
+sudo certbot --nginx -d url.yourdomain.com \
+  --noninteractive --agree-tos --register-unsafely-without-email --redirect
+```
+
+### Auto-deploy with GitHub Actions (CI/CD)
+
+On every push to `main`, this repo's Actions workflow will:
+1. Build the frontend (pnpm)
+2. Build the Rust backend (cargo)
+3. SSH into your VPS, pull latest code, rebuild, and restart the service.
+
+#### Step 1 — Add GitHub Secrets
+
+In **your GitHub repo** → *Settings* → *Secrets and variables* → *Actions* → *New repository secret*, add:
+
+| Secret Name | Value |
+|---|---|
+| `VPS_IP` | Your VPS public IP address (e.g. `43.157.202.239`) |
+| `VPS_USER` | SSH username on the VPS (e.g. `ubuntu`) |
+| `VPS_SSH_KEY` | **Private** SSH key from the keypair generated on the VPS |
+
+#### Step 2 — Generate an SSH keypair for the VPS
+
+On your VPS:
+
+```bash
+# Generate a new SSH key pair (no passphrase)
+ssh-keygen -t ed25519 -f ~/.ssh/vps_deploy_key -N ""
+
+# Add the PUBLIC key to authorized_keys
+cat ~/.ssh/vps_deploy_key.pub >> ~/.ssh/authorized_keys
+
+# Copy the PRIVATE key — you'll add it to GitHub Secrets
+cat ~/.ssh/vps_deploy_key
+```
+
+Copy the **private key** output and add it as the `VPS_SSH_KEY` secret in GitHub.
+
+#### Step 3 — Ensure the VPS home dir is traversable
+
+```bash
+# nginx (www-data) needs to read /home/ubuntu/shortener-link/dist
+sudo chmod 755 /home/ubuntu
+```
+
+#### Step 4 — Trigger the workflow
+
+Push any change to `main`:
+
+```bash
+git push origin main
+```
+
+Then check the **Actions** tab in your GitHub repo to see the deployment running.
+
+### Common VPS commands
+
+```bash
+# Restart after updates
+sudo systemctl restart shortener
+
+# View logs
+sudo journalctl -u shortener -f
+
+# Rebuild manually
+cd /home/ubuntu/shortener-link
+git pull
+pnpm build
+cd backend && cargo build --release
+sudo systemctl restart shortener
+
+# Check SSL cert expiry
+sudo certbot certificates
+```
+
+---
+
+## License
+
+MIT
