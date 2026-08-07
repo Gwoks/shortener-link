@@ -323,9 +323,11 @@ async fn list(
     }
     let total: i64 = cq.fetch_one(&state.pool).await.map_err(internal)?;
 
-    // page
+    // page (secondary `id` key keeps ordering deterministic across requests when
+    // rows tie on created_at/click_count, so offset pagination never skips or
+    // duplicates a row between pages).
     let list_sql = format!(
-        "SELECT * FROM link WHERE {where_sql} ORDER BY {order_col} {order} LIMIT ? OFFSET ?"
+        "SELECT * FROM link WHERE {where_sql} ORDER BY {order_col} {order}, id {order} LIMIT ? OFFSET ?"
     );
     let mut lq = sqlx::query_as::<_, Link>(&list_sql);
     for b in &binds {

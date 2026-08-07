@@ -1,4 +1,6 @@
-//! Health route (Phase 3) — `GET /api/healthz`.
+//! Health route (Phase 3) — `GET /api/healthz`. Also mounted at the bare
+//! `/healthz` path, which is what `deploy/nginx.conf`'s `location /healthz`
+//! proxies to; without it that check silently hit the SPA fallback instead.
 
 use axum::extract::State;
 use axum::routing::get;
@@ -8,7 +10,9 @@ use serde_json::{json, Value};
 use crate::state::AppState;
 
 pub fn router() -> Router<AppState> {
-    Router::new().route("/api/healthz", get(healthz))
+    Router::new()
+        .route("/api/healthz", get(healthz))
+        .route("/healthz", get(healthz))
 }
 
 async fn healthz(State(state): State<AppState>) -> Json<Value> {

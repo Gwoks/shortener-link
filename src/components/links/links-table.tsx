@@ -1,7 +1,7 @@
 'use client'
 
 /**
- * Desktop links table (DESIGN §4.5/§5.4, FR-28). Sticky header with sortable
+ * Desktop links table (DESIGN §4.5/§5.4, FR-28). Header with sortable
  * Clicks/Created columns (the two orderings the API supports, §6.2). Columns:
  * Link (mono code + open-in-new), Destination (mono, truncated, full on
  * hover/focus via title), Status (icon+text badge + lock), Clicks (tabular),
@@ -18,6 +18,13 @@ import { CopyButton } from './copy-button'
 import { LinkRowActions } from './link-row-actions'
 import type { SortKey, SortOrder } from './links-query'
 
+// Not sticky: Chrome renders a phantom gap (equal to the sticky `top` offset)
+// above a `position: sticky` table header even while unscrolled — a
+// long-standing, browser-specific limitation of sticky positioning on table
+// parts. With rows already capped at 20/page, a static header is the safer
+// trade.
+const TH_BG = 'bg-surface-subtle'
+
 function SortHeader({
   label,
   active,
@@ -33,7 +40,11 @@ function SortHeader({
 }) {
   const Icon = !active ? ArrowUpDown : order === 'asc' ? ArrowUp : ArrowDown
   return (
-    <th scope="col" className={cn('px-3 py-2.5', className)} aria-sort={active ? (order === 'asc' ? 'ascending' : 'descending') : 'none'}>
+    <th
+      scope="col"
+      className={cn(TH_BG, 'border-b border-border px-3 py-2.5', className)}
+      aria-sort={active ? (order === 'asc' ? 'ascending' : 'descending') : 'none'}
+    >
       <button
         type="button"
         onClick={onSort}
@@ -66,16 +77,34 @@ export function LinksTable({
 
   return (
     <div className="overflow-hidden rounded-md border border-border bg-surface">
-      <table className="w-full border-collapse text-left">
-        <thead className="sticky top-header z-sticky border-b border-border bg-surface-subtle">
+      <table className="w-full border-separate border-spacing-0 text-left">
+        <thead>
           <tr>
-            <th scope="col" className="px-3 py-2.5 text-overline uppercase text-text-tertiary">
+            <th
+              scope="col"
+              className={cn(
+                TH_BG,
+                'border-b border-border px-3 py-2.5 text-overline uppercase text-text-tertiary',
+              )}
+            >
               Link
             </th>
-            <th scope="col" className="px-3 py-2.5 text-overline uppercase text-text-tertiary">
+            <th
+              scope="col"
+              className={cn(
+                TH_BG,
+                'border-b border-border px-3 py-2.5 text-overline uppercase text-text-tertiary',
+              )}
+            >
               Destination
             </th>
-            <th scope="col" className="px-3 py-2.5 text-overline uppercase text-text-tertiary">
+            <th
+              scope="col"
+              className={cn(
+                TH_BG,
+                'border-b border-border px-3 py-2.5 text-overline uppercase text-text-tertiary',
+              )}
+            >
               Status
             </th>
             <SortHeader
@@ -91,7 +120,7 @@ export function LinksTable({
               order={order}
               onSort={() => onSortChange('created')}
             />
-            <th scope="col" className="px-3 py-2.5">
+            <th scope="col" className={cn(TH_BG, 'border-b border-border px-3 py-2.5')}>
               <span className="sr-only">Actions</span>
             </th>
           </tr>
@@ -115,10 +144,10 @@ export function LinksTable({
                     navigate(analyticsHref)
                   }
                 }}
-                className="group cursor-pointer border-b border-border last:border-b-0 transition-colors hover:bg-surface-hover focus-visible:bg-surface-hover"
+                className="group cursor-pointer transition-colors hover:bg-surface-hover focus-visible:bg-surface-hover"
               >
                 {/* Link */}
-                <td className="px-3 py-3 align-middle">
+                <td className="border-b border-border px-3 py-3 align-middle group-last:border-b-0">
                   <a
                     href={link.shortUrl}
                     target="_blank"
@@ -134,10 +163,13 @@ export function LinksTable({
                 </td>
 
                 {/* Destination */}
-                <td className="max-w-[1px] px-3 py-3 align-middle">
+                <td className="max-w-[1px] border-b border-border px-3 py-3 align-middle group-last:border-b-0">
                   {link.metaTitle ? (
                     <div className="min-w-0">
-                      <div className="truncate text-body-sm text-text-primary" title={link.metaTitle}>
+                      <div
+                        className="truncate text-body-sm text-text-primary"
+                        title={link.metaTitle}
+                      >
                         {link.metaTitle}
                       </div>
                       <div
@@ -158,28 +190,35 @@ export function LinksTable({
                 </td>
 
                 {/* Status */}
-                <td className="px-3 py-3 align-middle">
+                <td className="border-b border-border px-3 py-3 align-middle group-last:border-b-0">
                   <LinkStatusBadges link={link} />
                 </td>
 
                 {/* Clicks */}
-                <td className="px-3 py-3 text-right align-middle">
+                <td className="border-b border-border px-3 py-3 text-right align-middle group-last:border-b-0">
                   <span className="tnum text-body-sm font-medium text-text-primary">
                     {formatNumber(link.clickCount)}
                   </span>
                 </td>
 
                 {/* Created */}
-                <td className="whitespace-nowrap px-3 py-3 align-middle">
-                  <span className="text-body-sm text-text-secondary" title={absoluteTime(link.createdAt)}>
+                <td className="whitespace-nowrap border-b border-border px-3 py-3 align-middle group-last:border-b-0">
+                  <span
+                    className="text-body-sm text-text-secondary"
+                    title={absoluteTime(link.createdAt)}
+                  >
                     {relativeTime(link.createdAt)}
                   </span>
                 </td>
 
                 {/* Actions */}
-                <td className="px-3 py-3 text-right align-middle">
+                <td className="border-b border-border px-3 py-3 text-right align-middle group-last:border-b-0">
                   <div className="flex items-center justify-end gap-1">
-                    <CopyButton value={link.shortUrl} variant="ghost" aria-label={`Copy ${link.shortUrl}`} />
+                    <CopyButton
+                      value={link.shortUrl}
+                      variant="ghost"
+                      aria-label={`Copy ${link.shortUrl}`}
+                    />
                     <LinkRowActions link={link} onDelete={onDelete} />
                   </div>
                 </td>
