@@ -22,7 +22,14 @@ export interface ChartTheme {
   reducedMotion: boolean
 }
 
-const SERIES_VARS = ['--chart-1', '--chart-2', '--chart-3', '--chart-4', '--chart-5', '--chart-6'] as const
+const SERIES_VARS = [
+  '--chart-1',
+  '--chart-2',
+  '--chart-3',
+  '--chart-4',
+  '--chart-5',
+  '--chart-6',
+] as const
 
 /** Fallback colors so SSR/first paint never renders invisible strokes. */
 const FALLBACK: ChartTheme = {

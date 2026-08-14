@@ -46,11 +46,7 @@ export function GuestResultCard({
   return (
     <div className="rounded-lg border border-border bg-surface p-5 sm:p-6">
       <div className="flex items-start justify-between gap-3">
-        <h2
-          ref={headingRef}
-          tabIndex={-1}
-          className="text-h4 text-text-primary outline-none"
-        >
+        <h2 ref={headingRef} tabIndex={-1} className="text-h4 text-text-primary outline-none">
           Your short link
         </h2>
         {onDismiss && (
@@ -89,7 +85,10 @@ export function GuestResultCard({
           </div>
 
           {/* Destination (mono, truncated). */}
-          <p className="truncate font-mono text-caption text-text-tertiary" title={link.destinationUrl}>
+          <p
+            className="truncate font-mono text-caption text-text-tertiary"
+            title={link.destinationUrl}
+          >
             {displayDestination(link.destinationUrl)}
           </p>
         </div>
@@ -116,7 +115,13 @@ export function GuestResultCard({
       <p className="mt-4 flex items-center gap-1.5 text-caption text-text-secondary">
         <Clock className="h-3.5 w-3.5 shrink-0 text-warning-fg" aria-hidden="true" />
         <span>
-          Expires <time dateTime={link.expiresAt ?? undefined} title={link.expiresAt ? absoluteTime(link.expiresAt) : undefined}>{expiresLabel}</time>
+          Expires{' '}
+          <time
+            dateTime={link.expiresAt ?? undefined}
+            title={link.expiresAt ? absoluteTime(link.expiresAt) : undefined}
+          >
+            {expiresLabel}
+          </time>
           {' · '}only a basic click count is available for guest links.
         </span>
       </p>

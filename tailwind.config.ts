@@ -99,9 +99,9 @@ const config: Config = {
         settings: '640px',
       },
       spacing: {
-        'sidebar': '248px',
+        sidebar: '248px',
         'sidebar-collapsed': '64px',
-        'header': '56px',
+        header: '56px',
       },
       transitionTimingFunction: {
         standard: 'cubic-bezier(.2,0,0,1)',

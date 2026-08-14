@@ -106,21 +106,18 @@ export function AuthScreen() {
     setError(null)
   }, [])
 
-  const onOAuth = useCallback(
-    async (provider: 'google' | 'github') => {
-      setError(null)
-      setOauthBusy(provider)
-      try {
-        // Full redirect to the provider; on return the backend sends the user to
-        // callbackUrl. We never reach the line after this on success.
-        signInOAuth(provider)
-      } catch {
-        setOauthBusy(null)
-        setError('Could not start sign-in with that provider. Please try again.')
-      }
-    },
-    [],
-  )
+  const onOAuth = useCallback(async (provider: 'google' | 'github') => {
+    setError(null)
+    setOauthBusy(provider)
+    try {
+      // Full redirect to the provider; on return the backend sends the user to
+      // callbackUrl. We never reach the line after this on success.
+      signInOAuth(provider)
+    } catch {
+      setOauthBusy(null)
+      setError('Could not start sign-in with that provider. Please try again.')
+    }
+  }, [])
 
   const finishWithSession = useCallback(async () => {
     // Successful credential sign-in: refresh the client session, then navigate to
@@ -409,7 +406,10 @@ export function AuthScreen() {
       </div>
 
       <p className="mt-4 text-center text-caption text-text-tertiary">
-        <Link to="/" className="rounded-sm underline-offset-4 hover:text-text-secondary hover:underline">
+        <Link
+          to="/"
+          className="rounded-sm underline-offset-4 hover:text-text-secondary hover:underline"
+        >
           ← Back to home
         </Link>
       </p>

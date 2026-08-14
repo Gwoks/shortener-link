@@ -100,7 +100,9 @@ function UserMenu({ user }: { user: ShellUser }) {
         >
           <Avatar name={user.name} email={user.email} image={user.image} />
           <span className="min-w-0 flex-1">
-            <span className="block truncate text-body-sm font-medium text-text-primary">{displayName}</span>
+            <span className="block truncate text-body-sm font-medium text-text-primary">
+              {displayName}
+            </span>
             {user.name && user.email && (
               <span className="block truncate text-caption text-text-tertiary">{user.email}</span>
             )}

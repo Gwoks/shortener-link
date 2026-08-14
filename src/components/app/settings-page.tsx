@@ -68,7 +68,10 @@ export function SettingsPage({ user }: { user: SettingsUser }) {
 
   return (
     <div>
-      <PageHeader title="Settings" description="Manage your appearance, account, and data preferences." />
+      <PageHeader
+        title="Settings"
+        description="Manage your appearance, account, and data preferences."
+      />
 
       <div className="mx-auto w-full max-w-xl space-y-5">
         {/* Account */}
@@ -106,16 +109,18 @@ export function SettingsPage({ user }: { user: SettingsUser }) {
             <li className="flex gap-2.5">
               <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-success-fg" aria-hidden="true" />
               <span>
-                Visitor IP addresses are <strong className="font-medium text-text-primary">hashed and
-                truncated</strong> before storage (IPv4 to /24, IPv6 to /48, with a server-side pepper).
-                Raw IP addresses are never stored or logged.
+                Visitor IP addresses are{' '}
+                <strong className="font-medium text-text-primary">hashed and truncated</strong>{' '}
+                before storage (IPv4 to /24, IPv6 to /48, with a server-side pepper). Raw IP
+                addresses are never stored or logged.
               </span>
             </li>
             <li className="flex gap-2.5">
               <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-success-fg" aria-hidden="true" />
               <span>
                 Unique-visitor counts use a privacy-preserving key — a first-party cookie when
-                available, otherwise a hash of the truncated IP and browser — not a personal identifier.
+                available, otherwise a hash of the truncated IP and browser — not a personal
+                identifier.
               </span>
             </li>
             <li className="flex gap-2.5">
