@@ -199,7 +199,7 @@ export function AuthScreen() {
 
   return (
     <div className="w-full max-w-md">
-      <div className="rounded-lg border border-border bg-surface p-6 shadow-sm sm:p-8">
+      <div className="rounded-lg border border-border bg-surface p-6 sm:p-8">
         <h1 ref={headingRef} tabIndex={-1} className="text-h3 text-text-primary outline-none">
           {mode === 'signin' ? 'Sign in to Tess' : 'Create your account'}
         </h1>

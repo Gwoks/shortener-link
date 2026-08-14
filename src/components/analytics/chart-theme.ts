@@ -1,14 +1,13 @@
 'use client'
 
 /**
- * Chart theming + motion bridge (DESIGN §2.3, NFR-13, AC-50). Recharts needs real
- * color strings (not Tailwind classes), so we read the categorical palette and
- * axis/grid tokens from the resolved CSS custom properties and re-read them when
- * the theme flips (light/dark via the `.dark` class on <html>). Also exposes
- * whether motion should be disabled so charts honor prefers-reduced-motion.
+ * Chart theming + motion bridge (NFR-13, AC-50). Recharts needs real color
+ * strings (not Tailwind classes), so we read the categorical palette and
+ * axis/grid tokens from the resolved CSS custom properties once mounted. Also
+ * exposes whether motion should be disabled so charts honor
+ * prefers-reduced-motion.
  */
 import { useEffect, useState } from 'react'
-import { useTheme } from '../theme/theme'
 
 export interface ChartTheme {
   /** Color-blind-aware categorical series colors (--chart-1..6). */
@@ -27,12 +26,12 @@ const SERIES_VARS = ['--chart-1', '--chart-2', '--chart-3', '--chart-4', '--char
 
 /** Fallback colors so SSR/first paint never renders invisible strokes. */
 const FALLBACK: ChartTheme = {
-  series: ['#5b63f0', '#0ea5e9', '#14b8a6', '#f59e0b', '#ec4899', '#8b5cf6'],
-  grid: '#e5e7eb',
-  axis: '#6b7280',
+  series: ['#0075de', '#f64932', '#ffb110', '#b18164', '#62aef0', '#02093a'],
+  grid: 'rgba(0, 0, 0, 0.08)',
+  axis: '#757575',
   surface: '#ffffff',
-  border: '#e5e7eb',
-  text: '#111827',
+  border: 'rgba(0, 0, 0, 0.08)',
+  text: '#000000',
   reducedMotion: false,
 }
 
@@ -56,12 +55,10 @@ function readTheme(reducedMotion: boolean): ChartTheme {
 }
 
 /**
- * Resolve the chart palette for the active theme. Returns stable fallbacks during
- * SSR, then the real tokens after mount; recomputes whenever the resolved theme
- * changes so dark/light stay token-driven.
+ * Resolve the chart palette. Returns stable fallbacks during SSR, then the real
+ * tokens after mount; recomputes if prefers-reduced-motion changes.
  */
 export function useChartTheme(): ChartTheme {
-  const { resolved } = useTheme()
   const [reducedMotion, setReducedMotion] = useState(false)
   const [theme, setTheme] = useState<ChartTheme>(FALLBACK)
 
@@ -74,10 +71,10 @@ export function useChartTheme(): ChartTheme {
     return () => mq.removeEventListener('change', update)
   }, [])
 
-  // Re-read CSS tokens after mount and on every theme/motion change.
+  // Re-read CSS tokens after mount and whenever motion preference changes.
   useEffect(() => {
     setTheme(readTheme(reducedMotion))
-  }, [resolved, reducedMotion])
+  }, [reducedMotion])
 
   return theme
 }

@@ -1,22 +1,20 @@
 'use client'
 
 /**
- * Settings screen (DESIGN §5.11, FR-41, AC-46 + account). A quiet, single-column
- * page (max-width ~640px) with three sections:
- *  - Appearance: the System/Light/Dark theme toggle (reuses ThemeToggle, AC-46).
+ * Settings screen (DESIGN §5.11 + account). A quiet, single-column page
+ * (max-width ~640px) with two sections:
  *  - Account: signed-in name/email + sign out.
  *  - Privacy & data: a transparent note reflecting the A-PII stance — visitor IPs
  *    are hashed + truncated (never stored raw) and click events have a finite
  *    retention window — so the product is honest about what it keeps.
  *
- * Client component: it owns the interactive theme toggle and sign-out; account
- * identity is passed in from the server route's session (never trusts the client).
+ * Client component: it owns the interactive sign-out; account identity is
+ * passed in from the server route's session (never trusts the client).
  */
-import { LogOut, Palette, ShieldCheck, UserRound } from 'lucide-react'
+import { LogOut, ShieldCheck, UserRound } from 'lucide-react'
 import { useCallback, useState } from 'react'
 import { signOut } from '@/auth/auth-client'
 import { PageHeader } from './app-shell'
-import { ThemeToggle } from './theme-toggle'
 import { Avatar } from './avatar'
 import { Button } from '../ui/button'
 
@@ -35,7 +33,7 @@ function Section({
   description,
   children,
 }: {
-  icon: typeof Palette
+  icon: typeof UserRound
   title: string
   description?: string
   children: React.ReactNode
@@ -73,18 +71,6 @@ export function SettingsPage({ user }: { user: SettingsUser }) {
       <PageHeader title="Settings" description="Manage your appearance, account, and data preferences." />
 
       <div className="mx-auto w-full max-w-xl space-y-5">
-        {/* Appearance */}
-        <Section
-          icon={Palette}
-          title="Appearance"
-          description="Choose how Tess looks. System follows your device setting."
-        >
-          <div className="flex flex-wrap items-center gap-3">
-            <ThemeToggle />
-            <span className="text-caption text-text-tertiary">Your choice is saved on this device.</span>
-          </div>
-        </Section>
-
         {/* Account */}
         <Section icon={UserRound} title="Account" description="You’re signed in to Tess.">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

@@ -44,7 +44,7 @@ export function GuestResultCard({
   const expiresLabel = link.expiresAt ? relativeTime(link.expiresAt) : 'in 24 hours'
 
   return (
-    <div className="rounded-lg border border-border bg-surface p-5 shadow-sm sm:p-6">
+    <div className="rounded-lg border border-border bg-surface p-5 sm:p-6">
       <div className="flex items-start justify-between gap-3">
         <h2
           ref={headingRef}

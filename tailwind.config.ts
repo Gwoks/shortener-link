@@ -1,13 +1,12 @@
 /**
- * Tailwind config (DESIGN.md §2, ARCHITECTURE.md §1.2). All colors map to SEMANTIC
- * CSS custom properties defined in globals.css, so dark/light switch via tokens
- * (FR-41/NFR-13) — never hardcoded inversion. Components reference `bg-surface`,
- * `text-secondary`, `border-default`, `accent`, etc. — not raw palette values.
+ * Tailwind config (root DESIGN.md — "Notion" warm-paper style, light only). All
+ * colors map to SEMANTIC CSS custom properties defined in globals.css. Components
+ * reference `bg-surface`, `text-secondary`, `border-default`, `accent`, etc. —
+ * not raw palette values.
  */
 import type { Config } from 'tailwindcss'
 
 const config: Config = {
-  darkMode: 'class',
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     // Spacing scale (4px base, DESIGN §2.5) — extends Tailwind defaults.
@@ -59,26 +58,33 @@ const config: Config = {
       },
       fontFamily: {
         sans: 'var(--font-sans)',
+        serif: 'var(--font-serif)',
         mono: 'var(--font-mono)',
       },
+      // Type scale (DESIGN.md §Type Scale): display=heading-lg, h1=heading,
+      // h2=heading-sm, h3=subheading. h4/mono/mono-lg/overline have no direct
+      // DESIGN role and keep their existing proportions, just the new font.
       fontSize: {
-        display: ['40px', { lineHeight: '1.1', fontWeight: '700' }],
-        h1: ['30px', { lineHeight: '1.2', fontWeight: '700' }],
-        h2: ['24px', { lineHeight: '1.25', fontWeight: '600' }],
-        h3: ['20px', { lineHeight: '1.3', fontWeight: '600' }],
+        display: ['48px', { lineHeight: '1.5', fontWeight: '700' }],
+        h1: ['40px', { lineHeight: '1.5', fontWeight: '700' }],
+        h2: ['22px', { lineHeight: '1.27', fontWeight: '600', letterSpacing: '-0.242px' }],
+        h3: ['20px', { lineHeight: '1', fontWeight: '600' }],
         h4: ['16px', { lineHeight: '1.4', fontWeight: '600' }],
-        body: ['15px', { lineHeight: '1.5' }],
-        'body-sm': ['13px', { lineHeight: '1.45' }],
-        caption: ['12px', { lineHeight: '1.4', fontWeight: '500' }],
+        body: ['16px', { lineHeight: '1.5' }],
+        'body-sm': ['14px', { lineHeight: '1.43' }],
+        caption: ['12px', { lineHeight: '1.33', fontWeight: '500', letterSpacing: '0.12px' }],
         overline: ['11px', { lineHeight: '1.3', fontWeight: '600', letterSpacing: '0.04em' }],
         mono: ['13px', { lineHeight: '1.5' }],
         'mono-lg': ['18px', { lineHeight: '1.4', fontWeight: '500' }],
       },
       borderRadius: {
+        // DESIGN.md §Border Radius: small=4px, buttons=8px, cards=12px, pills=9999px.
+        // `lg` is capped at the card radius — the system never exceeds 12px on
+        // rectangular content (DESIGN §Don'ts).
         xs: '4px',
-        sm: '6px',
-        md: '10px',
-        lg: '14px',
+        sm: '8px',
+        md: '12px',
+        lg: '12px',
         pill: '9999px',
       },
       boxShadow: {
@@ -103,7 +109,7 @@ const config: Config = {
       },
       transitionDuration: {
         fast: '120ms',
-        base: '180ms',
+        base: '200ms',
         slow: '240ms',
       },
       zIndex: {

@@ -3,9 +3,10 @@
 /**
  * Authenticated app shell (DESIGN §4.7, §5.0, §5.4; USER-JOURNEY §2.2; A-NAV).
  * Persistent left sidebar on desktop; a focus-trapped slide-in drawer on mobile
- * (Radix Dialog → Escape/scrim/scroll-lock for free). A slim sticky top bar holds
- * the mobile hamburger + theme toggle; each page renders its own <PageHeader>
- * (title + contextual actions) as the first block of its content column.
+ * (Radix Dialog → Escape/scrim/scroll-lock for free). A slim sticky top bar
+ * (mobile only) holds the hamburger + wordmark; each page renders its own
+ * <PageHeader> (title + contextual actions) as the first block of its content
+ * column.
  *
  * A skip-to-content link is the first focusable element (a11y, DESIGN §4.7/§6).
  * Routes follow ARCHITECTURE §3.2; sign-out uses the SPA auth client.
@@ -26,7 +27,6 @@ import {
   DropdownMenuTrigger,
 } from '../ui/menu'
 import { Avatar } from './avatar'
-import { ThemeToggle } from './theme-toggle'
 import { isNavActive, NAV_ITEMS } from './nav-items'
 
 export interface ShellUser {
@@ -111,11 +111,6 @@ function UserMenu({ user }: { user: ShellUser }) {
         <DropdownMenuLabel>Signed in as</DropdownMenuLabel>
         <div className="truncate px-2.5 pb-1.5 text-body-sm text-text-secondary">
           {user.email ?? displayName}
-        </div>
-        <DropdownMenuSeparator />
-        <div className="px-2.5 py-2">
-          <p className="mb-1.5 text-overline uppercase text-text-tertiary">Theme</p>
-          <ThemeToggle />
         </div>
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={() => void signOut()} destructive>
@@ -219,17 +214,10 @@ export function AppShell({ user, children }: { user: ShellUser; children: React.
       </aside>
 
       <div className="flex min-h-screen flex-col lg:pl-sidebar">
-        {/* Slim sticky top bar — mobile chrome only; desktop keeps it for the theme toggle. */}
-        <header className="sticky top-0 z-sticky flex h-header shrink-0 items-center gap-3 border-b border-border bg-canvas/90 px-4 backdrop-blur supports-[backdrop-filter]:bg-canvas/75 sm:px-6 lg:justify-end">
-          <div className="lg:hidden">
-            <MobileDrawer user={user} pathname={pathname} />
-          </div>
-          <div className="lg:hidden">
-            <Wordmark />
-          </div>
-          <div className="ml-auto lg:ml-0">
-            <ThemeToggle />
-          </div>
+        {/* Slim sticky top bar — mobile chrome only; desktop relies on the sidebar. */}
+        <header className="sticky top-0 z-sticky flex h-header shrink-0 items-center gap-3 border-b border-border bg-canvas/90 px-4 backdrop-blur supports-[backdrop-filter]:bg-canvas/75 sm:px-6 lg:hidden">
+          <MobileDrawer user={user} pathname={pathname} />
+          <Wordmark />
         </header>
 
         <main

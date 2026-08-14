@@ -3,15 +3,14 @@
 /**
  * Public top bar (DESIGN §5.0 guest frames, §5.1). A minimal bar shared by the
  * guest landing hero and the auth screens: wordmark on the left; sign in / sign
- * up + theme toggle on the right. When the visitor is already authenticated we
- * swap the auth links for a single "Go to dashboard" affordance (USER-JOURNEY
- * Journey A success → "point them to the dashboard").
+ * up on the right. When the visitor is already authenticated we swap the auth
+ * links for a single "Go to dashboard" affordance (USER-JOURNEY Journey A
+ * success → "point them to the dashboard").
  *
  * Kept presentational and prop-driven (no session read here) so it works in both
  * server-rendered pages (which resolve the session once) and the auth screens.
  */
 import { Link } from 'react-router-dom'
-import { ThemeToggle } from '../app/theme-toggle'
 import { Button } from '../ui/button'
 
 function Wordmark() {
@@ -58,7 +57,6 @@ export function PublicTopBar({
               </Button>
             </>
           ))}
-        <ThemeToggle />
       </div>
     </header>
   )
