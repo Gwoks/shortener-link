@@ -22,20 +22,26 @@ fn json_string(s: &str) -> String {
     serde_json::to_string(s).unwrap_or_else(|_| "\"\"".to_string())
 }
 
+/// Light-only styling from the root DESIGN.md ("Notion" warm-paper system):
+/// paper canvas, a white 12px card with a hairline border (no shadow), ink text
+/// with a warm graphite secondary, and the single Notion-blue primary action.
 const BASE_STYLE: &str = r#"
-  :root{--bg:#fff;--fg:#0f172a;--muted:#64748b;--accent:#4f46e5;--border:#e2e8f0;--err:#dc2626}
-  @media (prefers-color-scheme:dark){:root{--bg:#0b1120;--fg:#e2e8f0;--muted:#94a3b8;--accent:#818cf8;--border:#1e293b;--err:#f87171}}
+  :root{--paper:#f6f5f4;--surface:#fff;--ink:#000;--graphite:#615d59;--stone:#757575;--blue:#0075de;--blue-hover:#0066c2;--hairline:rgba(0,0,0,.08);--field:rgba(0,0,0,.16);--err:#c22a13}
   *{box-sizing:border-box}
-  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;line-height:1.5;padding:1rem}
-  .card{max-width:30rem;width:100%;border:1px solid var(--border);border-radius:14px;padding:2rem;text-align:center}
-  h1{font-size:1.4rem;margin:0 0 .5rem}
-  p{color:var(--muted);margin:.25rem 0 1rem}
-  a{color:var(--accent)}
-  label{display:block;text-align:left;font-weight:600;margin-bottom:.25rem}
-  input{width:100%;padding:.6rem .75rem;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--fg);font-size:1rem}
-  button{margin-top:1rem;width:100%;padding:.6rem 1rem;border:0;border-radius:8px;background:var(--accent);color:#fff;font-size:1rem;cursor:pointer}
-  button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-  .err{color:var(--err);text-align:left;margin:.5rem 0 0;min-height:1.25rem}
+  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--paper);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;padding:1rem}
+  .card{max-width:30rem;width:100%;background:var(--surface);border:1px solid var(--hairline);border-radius:12px;padding:2.5rem 2rem;text-align:center}
+  h1{font-size:22px;line-height:1.27;letter-spacing:-.242px;font-weight:600;margin:0 0 .5rem}
+  p{color:var(--graphite);margin:.25rem 0 1.25rem}
+  a{color:var(--blue);font-weight:500;text-decoration:none}
+  a:hover{text-decoration:underline}
+  label{display:block;text-align:left;font-size:14px;font-weight:500;margin-bottom:.375rem}
+  input{width:100%;height:2.5rem;padding:0 .75rem;border:1px solid var(--field);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;transition:border-color .2s ease}
+  input:focus{border-color:var(--blue)}
+  button{margin-top:1rem;width:100%;height:2.5rem;padding:0 15px;border:0;border-radius:8px;background:var(--blue);color:#fff;font:inherit;font-size:14px;font-weight:500;cursor:pointer;transition:background-color .2s ease}
+  button:hover{background:var(--blue-hover)}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+  .err{color:var(--err);font-size:14px;text-align:left;margin:.5rem 0 0;min-height:1.25rem}
 "#;
 
 fn shell(title: &str, body_inner: &str, body_script: &str) -> String {
