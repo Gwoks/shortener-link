@@ -42,7 +42,10 @@ pub fn is_valid_http_url(value: &str) -> bool {
 pub fn validate_http_url(value: &str, field: &str) -> Result<String, ApiError> {
     let trimmed = value.trim();
     if trimmed.is_empty() {
-        return Err(ApiError::validation(field, "A destination URL is required."));
+        return Err(ApiError::validation(
+            field,
+            "A destination URL is required.",
+        ));
     }
     if trimmed.chars().count() > URL_MAX {
         return Err(ApiError::validation(field, "That URL is too long."));
@@ -64,13 +67,19 @@ fn validate_alias_field(value: &str) -> Result<String, ApiError> {
     if len < alias::ALIAS_MIN {
         return Err(ApiError::validation(
             "alias",
-            format!("Custom links must be at least {} characters.", alias::ALIAS_MIN),
+            format!(
+                "Custom links must be at least {} characters.",
+                alias::ALIAS_MIN
+            ),
         ));
     }
     if len > alias::ALIAS_MAX {
         return Err(ApiError::validation(
             "alias",
-            format!("Custom links must be at most {} characters.", alias::ALIAS_MAX),
+            format!(
+                "Custom links must be at most {} characters.",
+                alias::ALIAS_MAX
+            ),
         ));
     }
     if !trimmed
@@ -102,10 +111,16 @@ fn validate_utm_field(field: &str, value: &str) -> Result<Option<String>, ApiErr
 
 fn validate_max_clicks(value: i64) -> Result<i64, ApiError> {
     if value <= 0 {
-        return Err(ApiError::validation("maxClicks", "Must be a positive number."));
+        return Err(ApiError::validation(
+            "maxClicks",
+            "Must be a positive number.",
+        ));
     }
     if value > MAX_CLICKS_MAX {
-        return Err(ApiError::validation("maxClicks", "That click limit is too large."));
+        return Err(ApiError::validation(
+            "maxClicks",
+            "That click limit is too large.",
+        ));
     }
     Ok(value)
 }
@@ -115,7 +130,10 @@ fn validate_password(value: &str) -> Result<String, ApiError> {
         return Err(ApiError::validation("password", "Enter a password."));
     }
     if value.chars().count() > PASSWORD_MAX {
-        return Err(ApiError::validation("password", "That password is too long."));
+        return Err(ApiError::validation(
+            "password",
+            "That password is too long.",
+        ));
     }
     Ok(value.to_string())
 }

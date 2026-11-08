@@ -57,13 +57,19 @@ pub struct Config {
 impl Config {
     pub fn from_env() -> Self {
         // base_url: prefer BASE_URL, then NEXTAUTH_URL, default localhost; strip trailing slash.
-        let base_url = str_env("BASE_URL", &str_env("NEXTAUTH_URL", "http://localhost:8080"))
-            .trim_end_matches('/')
-            .to_string();
+        let base_url = str_env(
+            "BASE_URL",
+            &str_env("NEXTAUTH_URL", "http://localhost:8080"),
+        )
+        .trim_end_matches('/')
+        .to_string();
         // auth_secret: prefer AUTH_SECRET, fall back to NEXTAUTH_SECRET for smooth migration.
         let auth_secret = str_env(
             "AUTH_SECRET",
-            &str_env("NEXTAUTH_SECRET", "dev-only-insecure-secret-change-me-please-32b"),
+            &str_env(
+                "NEXTAUTH_SECRET",
+                "dev-only-insecure-secret-change-me-please-32b",
+            ),
         );
         Config {
             sqlite_path: str_env("SQLITE_PATH", "data/app.db"),
@@ -77,7 +83,11 @@ impl Config {
             google_client_secret: str_env("GOOGLE_CLIENT_SECRET", ""),
             github_client_id: str_env("GITHUB_CLIENT_ID", ""),
             github_client_secret: str_env("GITHUB_CLIENT_SECRET", ""),
-            redirect_status: if int_env("REDIRECT_STATUS", 302) == 301 { 301 } else { 302 },
+            redirect_status: if int_env("REDIRECT_STATUS", 302) == 301 {
+                301
+            } else {
+                302
+            },
             redirect_cache_ttl: int_env("REDIRECT_CACHE_TTL", 3600) as u64,
             redirect_negative_cache_ttl: int_env("REDIRECT_NEGATIVE_CACHE_TTL", 60) as u64,
             click_retention_days: int_env("CLICK_RETENTION_DAYS", 400),

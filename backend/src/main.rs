@@ -1,20 +1,19 @@
 use std::sync::Arc;
 
 use shortener::config::Config;
+use shortener::db;
 use shortener::queue;
 use shortener::routes;
 use shortener::services::cache::Cache;
 use shortener::services::ratelimit::Limiter;
 use shortener::state::AppState;
 use shortener::tasks;
-use shortener::db;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(
-            tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| "info".into()),
+            tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| "info".into()),
         )
         .init();
 
@@ -34,12 +33,19 @@ async fn main() -> anyhow::Result<()> {
     let geo = match maxminddb::Reader::open_readfile(&cfg.geoip_db_path) {
         Ok(reader) => Some(reader),
         Err(_) => {
-            tracing::info!("geoip db not found at {} — geo lookups disabled", cfg.geoip_db_path);
+            tracing::info!(
+                "geoip db not found at {} — geo lookups disabled",
+                cfg.geoip_db_path
+            );
             None
         }
     };
 
-    let cache = Cache::new(cfg.redirect_cache_ttl, cfg.redirect_negative_cache_ttl, 10_000);
+    let cache = Cache::new(
+        cfg.redirect_cache_ttl,
+        cfg.redirect_negative_cache_ttl,
+        10_000,
+    );
     let (click_tx, click_rx, scrape_tx, scrape_rx) = queue::channels();
 
     let cfg = Arc::new(cfg);

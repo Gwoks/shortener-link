@@ -37,7 +37,10 @@ pub async fn run(
     while let Some(msg) = rx.recv().await {
         if let Err(e) = process_one(&pool, &cfg, geo.as_ref().as_ref(), &msg).await {
             // A bad message is logged and skipped — never crash the loop.
-            tracing::error!("[tasks] failed to ingest click for link {}: {e}", msg.link_id);
+            tracing::error!(
+                "[tasks] failed to ingest click for link {}: {e}",
+                msg.link_id
+            );
         }
     }
     tracing::info!("[tasks] click ingest stopped");
@@ -75,13 +78,12 @@ pub async fn process_one(
 
     // Unique-visitor detection: first time (link_id, visitor_key) is seen → unique.
     // INSERT OR IGNORE: rows_affected == 1 means a fresh insert (unique).
-    let inserted = sqlx::query(
-        "INSERT OR IGNORE INTO visitor_seen (link_id, visitor_key) VALUES (?, ?)",
-    )
-    .bind(&msg.link_id)
-    .bind(&vkey)
-    .execute(pool)
-    .await?;
+    let inserted =
+        sqlx::query("INSERT OR IGNORE INTO visitor_seen (link_id, visitor_key) VALUES (?, ?)")
+            .bind(&msg.link_id)
+            .bind(&vkey)
+            .execute(pool)
+            .await?;
     let is_unique = inserted.rows_affected() == 1;
 
     // UTC day for the rollup (YYYY-MM-DD) — matches analytics-service day keys.
@@ -384,7 +386,10 @@ mod tests {
         .await
         .unwrap();
         assert_eq!(roll.0, 3, "rollup clicks");
-        assert_eq!(roll.1, 2, "rollup uniques — repeat visitor not double-counted");
+        assert_eq!(
+            roll.1, 2,
+            "rollup uniques — repeat visitor not double-counted"
+        );
 
         // Breakdown maps merged: referrer SEARCH|google.com → 3; browser Chrome → 3.
         let by_ref: Value = serde_json::from_str(&roll.2).unwrap();
@@ -427,9 +432,14 @@ mod tests {
         process_one(&pool, &cfg, None, &msg(&link_id, None, Some("203.0.113.5")))
             .await
             .unwrap();
-        process_one(&pool, &cfg, None, &msg(&link_id, None, Some("203.0.113.200")))
-            .await
-            .unwrap();
+        process_one(
+            &pool,
+            &cfg,
+            None,
+            &msg(&link_id, None, Some("203.0.113.200")),
+        )
+        .await
+        .unwrap();
 
         let roll: (i64, i64) =
             sqlx::query_as("SELECT clicks, uniques FROM click_rollup WHERE link_id = ?")
@@ -460,8 +470,7 @@ mod tests {
         };
         let dt = Utc.timestamp_millis_opt(m.occurred_at_ms).single().unwrap();
         let key = visitor_key(&cfg, &m, dt);
-        let expected =
-            hmac_sha256_hex(b"test-pepper", b"2026-06-20|c:abc");
+        let expected = hmac_sha256_hex(b"test-pepper", b"2026-06-20|c:abc");
         assert_eq!(key, expected, "cookie-first visitor key");
 
         // IP-fallback basis "i:<trunc>|<sha256(ua)[..16]>".

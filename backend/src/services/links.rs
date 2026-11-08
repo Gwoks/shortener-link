@@ -219,10 +219,7 @@ async fn generate_unique_code(pool: &SqlitePool) -> Result<String, ApiError> {
 
 /// Resolve a code for the redirect path: cache → DB on miss (warming cache).
 /// Returns the redirect `LinkView` plus the link id (needed for click enqueue).
-pub async fn resolve_for_redirect(
-    state: &AppState,
-    code: &str,
-) -> Option<(LinkView, String)> {
+pub async fn resolve_for_redirect(state: &AppState, code: &str) -> Option<(LinkView, String)> {
     // Cache stores only the view; keep an id side-table-free design by re-reading
     // the id on the (rare) path that needs it. On a cache hit we still need the id
     // for the ClickMsg, so we cache nothing extra and read the row on demand only

@@ -222,20 +222,44 @@ mod tests {
 
     #[test]
     fn status_map_matches_oracle() {
-        assert_eq!(ErrorCode::ValidationError.status(), StatusCode::UNPROCESSABLE_ENTITY);
-        assert_eq!(ErrorCode::InvalidUrl.status(), StatusCode::UNPROCESSABLE_ENTITY);
+        assert_eq!(
+            ErrorCode::ValidationError.status(),
+            StatusCode::UNPROCESSABLE_ENTITY
+        );
+        assert_eq!(
+            ErrorCode::InvalidUrl.status(),
+            StatusCode::UNPROCESSABLE_ENTITY
+        );
         assert_eq!(ErrorCode::AliasTaken.status(), StatusCode::CONFLICT);
-        assert_eq!(ErrorCode::AliasReserved.status(), StatusCode::UNPROCESSABLE_ENTITY);
+        assert_eq!(
+            ErrorCode::AliasReserved.status(),
+            StatusCode::UNPROCESSABLE_ENTITY
+        );
         assert_eq!(ErrorCode::UrlBlocked.status(), StatusCode::BAD_REQUEST);
-        assert_eq!(ErrorCode::RateLimited.status(), StatusCode::TOO_MANY_REQUESTS);
-        assert_eq!(ErrorCode::UnlockLocked.status(), StatusCode::TOO_MANY_REQUESTS);
+        assert_eq!(
+            ErrorCode::RateLimited.status(),
+            StatusCode::TOO_MANY_REQUESTS
+        );
+        assert_eq!(
+            ErrorCode::UnlockLocked.status(),
+            StatusCode::TOO_MANY_REQUESTS
+        );
         assert_eq!(ErrorCode::WrongPassword.status(), StatusCode::UNAUTHORIZED);
-        assert_eq!(ErrorCode::Unauthenticated.status(), StatusCode::UNAUTHORIZED);
+        assert_eq!(
+            ErrorCode::Unauthenticated.status(),
+            StatusCode::UNAUTHORIZED
+        );
         assert_eq!(ErrorCode::Forbidden.status(), StatusCode::FORBIDDEN);
         assert_eq!(ErrorCode::NotFound.status(), StatusCode::NOT_FOUND);
-        assert_eq!(ErrorCode::BulkLimitExceeded.status(), StatusCode::PAYLOAD_TOO_LARGE);
+        assert_eq!(
+            ErrorCode::BulkLimitExceeded.status(),
+            StatusCode::PAYLOAD_TOO_LARGE
+        );
         assert_eq!(ErrorCode::EmailTaken.status(), StatusCode::CONFLICT);
-        assert_eq!(ErrorCode::Internal.status(), StatusCode::INTERNAL_SERVER_ERROR);
+        assert_eq!(
+            ErrorCode::Internal.status(),
+            StatusCode::INTERNAL_SERVER_ERROR
+        );
     }
 
     #[test]

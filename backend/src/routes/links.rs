@@ -3,8 +3,8 @@
 use axum::extract::{Path, Query, State};
 use axum::http::{header::SET_COOKIE, HeaderValue, StatusCode};
 use axum::response::{IntoResponse, Response};
-use axum::{Json, Router};
 use axum::routing::{get, post};
+use axum::{Json, Router};
 use serde::Deserialize;
 use serde_json::{json, Value};
 
@@ -16,9 +16,7 @@ use crate::services::alias;
 use crate::services::links::{self, CreateLinkArgs};
 use crate::services::serialize::serialize_link;
 use crate::services::utm::UtmParams;
-use crate::services::validation::{
-    self, CreateLinkInput, Patch, PatchLinkInput, UtmInput,
-};
+use crate::services::validation::{self, CreateLinkInput, Patch, PatchLinkInput, UtmInput};
 use crate::state::AppState;
 
 pub const GUEST_COOKIE: &str = "guest_id";
@@ -253,14 +251,21 @@ async fn list(
     user: CurrentUser,
     Query(q): Query<ListQuery>,
 ) -> Result<Json<Value>, ApiError> {
-    let search = q
-        .q
-        .or(q.search)
-        .map(|s| s.trim().to_string())
-        .filter(|s| !s.is_empty());
+    let search =
+        q.q.or(q.search)
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty());
     let status = q.status.as_deref();
-    let sort = if q.sort.as_deref() == Some("clicks") { "clicks" } else { "created" };
-    let order = if q.order.as_deref() == Some("asc") { "ASC" } else { "DESC" };
+    let sort = if q.sort.as_deref() == Some("clicks") {
+        "clicks"
+    } else {
+        "created"
+    };
+    let order = if q.order.as_deref() == Some("asc") {
+        "ASC"
+    } else {
+        "DESC"
+    };
     let page = q
         .page
         .and_then(|p| p.parse::<i64>().ok())
@@ -302,9 +307,7 @@ async fn list(
     }
 
     if let Some(s) = &search {
-        conds.push(
-            "(code LIKE ? OR destination_url LIKE ? OR meta_title LIKE ?)".into(),
-        );
+        conds.push("(code LIKE ? OR destination_url LIKE ? OR meta_title LIKE ?)".into());
         let like_lower = format!("%{}%", s.to_lowercase());
         let like = format!("%{s}%");
         binds.push(like_lower);
@@ -313,7 +316,11 @@ async fn list(
     }
 
     let where_sql = conds.join(" AND ");
-    let order_col = if sort == "clicks" { "click_count" } else { "created_at" };
+    let order_col = if sort == "clicks" {
+        "click_count"
+    } else {
+        "created_at"
+    };
 
     // total
     let count_sql = format!("SELECT COUNT(*) FROM link WHERE {where_sql}");
@@ -370,7 +377,9 @@ async fn get_one(
     Path(id): Path<String>,
 ) -> Result<Json<Value>, ApiError> {
     let link = load_owned(&state, &id, &user.id).await?;
-    Ok(Json(json!({ "link": serialize_link(&link, &state.cfg.base_url) })))
+    Ok(Json(
+        json!({ "link": serialize_link(&link, &state.cfg.base_url) }),
+    ))
 }
 
 async fn patch_one(
@@ -491,7 +500,9 @@ async fn patch_one(
         .fetch_one(&state.pool)
         .await
         .map_err(internal)?;
-    Ok(Json(json!({ "link": serialize_link(&updated, &state.cfg.base_url) })))
+    Ok(Json(
+        json!({ "link": serialize_link(&updated, &state.cfg.base_url) }),
+    ))
 }
 
 enum BindVal {
@@ -510,10 +521,14 @@ fn is_unique(e: &sqlx::Error) -> bool {
 /// value semantics for the three nullable fields (expiresAt/maxClicks/password).
 fn parse_patch_body(raw: &Value) -> Result<PatchLinkInput, ApiError> {
     let obj = raw.as_object().ok_or_else(|| {
-        ApiError::new(ErrorCode::ValidationError).with_message("Request body must be a JSON object.")
+        ApiError::new(ErrorCode::ValidationError)
+            .with_message("Request body must be a JSON object.")
     })?;
 
-    fn nullable_str(obj: &serde_json::Map<String, Value>, key: &str) -> Result<Patch<String>, ApiError> {
+    fn nullable_str(
+        obj: &serde_json::Map<String, Value>,
+        key: &str,
+    ) -> Result<Patch<String>, ApiError> {
         match obj.get(key) {
             None => Ok(Patch::Absent),
             Some(Value::Null) => Ok(Patch::Null),
@@ -521,7 +536,10 @@ fn parse_patch_body(raw: &Value) -> Result<PatchLinkInput, ApiError> {
             Some(_) => Err(ApiError::validation(key, "Invalid value.")),
         }
     }
-    fn nullable_int(obj: &serde_json::Map<String, Value>, key: &str) -> Result<Patch<i64>, ApiError> {
+    fn nullable_int(
+        obj: &serde_json::Map<String, Value>,
+        key: &str,
+    ) -> Result<Patch<i64>, ApiError> {
         match obj.get(key) {
             None => Ok(Patch::Absent),
             Some(Value::Null) => Ok(Patch::Null),
@@ -595,11 +613,12 @@ async fn bulk(
     }
 
     if body.urls.len() > state.cfg.bulk_max {
-        return Err(ApiError::new(ErrorCode::BulkLimitExceeded)
-            .with_message(format!(
+        return Err(
+            ApiError::new(ErrorCode::BulkLimitExceeded).with_message(format!(
                 "Please submit at most {} URLs at a time.",
                 state.cfg.bulk_max
-            )));
+            )),
+        );
     }
 
     let ip = client_ip(&headers);
@@ -740,12 +759,17 @@ async fn unlock(
 
     // Independent unlock limiter / lockout (AC-24).
     let key = rl_key(&ip);
-    if let Err(retry) = state.limiter.check_unlock(&link.id, &key, &state.cfg.rl_unlock) {
+    if let Err(retry) = state
+        .limiter
+        .check_unlock(&link.id, &key, &state.cfg.rl_unlock)
+    {
         return Err(ApiError::new(ErrorCode::UnlockLocked).with_retry_after(retry));
     }
 
     if !crate::auth::password::verify(&hash, &password) {
-        state.limiter.record_unlock_failure(&link.id, &key, &state.cfg.rl_unlock);
+        state
+            .limiter
+            .record_unlock_failure(&link.id, &key, &state.cfg.rl_unlock);
         return Err(ApiError::new(ErrorCode::WrongPassword));
     }
 

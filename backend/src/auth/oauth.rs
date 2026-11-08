@@ -134,11 +134,7 @@ pub struct OauthIdentity {
 }
 
 /// Exchange the authorization code for an access token.
-async fn exchange_code(
-    provider: Provider,
-    cfg: &Config,
-    code: &str,
-) -> anyhow::Result<String> {
+async fn exchange_code(provider: Provider, cfg: &Config, code: &str) -> anyhow::Result<String> {
     let client = reqwest::Client::new();
     let params = [
         ("grant_type", "authorization_code"),
@@ -183,10 +179,7 @@ struct GithubEmail {
 }
 
 /// Fetch the provider userinfo and normalize it to an `OauthIdentity`.
-async fn fetch_identity(
-    provider: Provider,
-    access_token: &str,
-) -> anyhow::Result<OauthIdentity> {
+async fn fetch_identity(provider: Provider, access_token: &str) -> anyhow::Result<OauthIdentity> {
     let client = reqwest::Client::new();
     match provider {
         Provider::Google => {
@@ -298,8 +291,14 @@ mod tests {
         assert!(u.contains("response_type=code"));
         assert!(u.contains("client_id=gid"));
         assert!(u.contains("state=xyz"));
-        assert!(u.contains("redirect_uri=https%3A%2F%2Fsho.rt%2Fapi%2Fauth%2Foauth%2Fgoogle%2Fcallback"));
-        assert!(u.contains("scope=openid%20email%20profile") || u.contains("scope=openid+email+profile") || u.contains("openid%20email%20profile"));
+        assert!(u.contains(
+            "redirect_uri=https%3A%2F%2Fsho.rt%2Fapi%2Fauth%2Foauth%2Fgoogle%2Fcallback"
+        ));
+        assert!(
+            u.contains("scope=openid%20email%20profile")
+                || u.contains("scope=openid+email+profile")
+                || u.contains("openid%20email%20profile")
+        );
     }
 
     #[test]

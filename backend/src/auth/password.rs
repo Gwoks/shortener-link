@@ -1,7 +1,9 @@
 //! Account/link password hashing (argon2id) — ported from `src/lib/hash.ts`
 //! (`hashPassword` / `verifyPassword`).
 
-use argon2::password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString};
+use argon2::password_hash::{
+    rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString,
+};
 use argon2::Argon2;
 
 /// Hash a plaintext password with argon2id (default params).

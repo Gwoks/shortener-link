@@ -56,12 +56,11 @@ mod tests {
         .await
         .unwrap();
 
-        let row: crate::models::Link =
-            sqlx::query_as("SELECT * FROM link WHERE code = ?")
-                .bind("abc123")
-                .fetch_one(&pool)
-                .await
-                .unwrap();
+        let row: crate::models::Link = sqlx::query_as("SELECT * FROM link WHERE code = ?")
+            .bind("abc123")
+            .fetch_one(&pool)
+            .await
+            .unwrap();
 
         assert_eq!(row.id, id);
         assert_eq!(row.destination_url, "https://example.com");

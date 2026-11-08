@@ -6,8 +6,8 @@
 //! rejects (used by the guest-capable create route).
 
 use axum::extract::FromRequestParts;
-use axum::http::request::Parts;
 use axum::http::header::COOKIE;
+use axum::http::request::Parts;
 
 use crate::auth::jwt;
 use crate::error::{ApiError, ErrorCode};
@@ -141,7 +141,10 @@ mod tests {
     fn parses_multiple_cookies() {
         let cs = parse_cookies(Some("a=1; b=2; session=tok"));
         assert_eq!(cs.len(), 3);
-        assert_eq!(cookie_from_header(Some("a=1; session=tok"), "session").as_deref(), Some("tok"));
+        assert_eq!(
+            cookie_from_header(Some("a=1; session=tok"), "session").as_deref(),
+            Some("tok")
+        );
         assert!(cookie_from_header(Some("a=1"), "session").is_none());
     }
 

@@ -231,7 +231,10 @@ async fn read_bounded(resp: reqwest::Response) -> Result<Vec<u8>, String> {
             return Err("body-too-large".to_string());
         }
     }
-    let bytes = resp.bytes().await.map_err(|_| "body-read-failed".to_string())?;
+    let bytes = resp
+        .bytes()
+        .await
+        .map_err(|_| "body-read-failed".to_string())?;
     let cap = MAX_BODY_BYTES.min(bytes.len());
     Ok(bytes[..cap].to_vec())
 }
@@ -262,16 +265,28 @@ mod tests {
     #[tokio::test]
     async fn ssrf_gate_rejects_private_ip_literal() {
         // Loopback / private literals must be rejected before any fetch.
-        assert_eq!(safe_fetch("http://127.0.0.1/").await, Err("BlockedIp".into()));
-        assert_eq!(safe_fetch("http://10.0.0.1/").await, Err("BlockedIp".into()));
+        assert_eq!(
+            safe_fetch("http://127.0.0.1/").await,
+            Err("BlockedIp".into())
+        );
+        assert_eq!(
+            safe_fetch("http://10.0.0.1/").await,
+            Err("BlockedIp".into())
+        );
         assert_eq!(
             safe_fetch("http://169.254.169.254/latest/meta-data/").await,
             Err("BlockedIp".into())
         );
         // localhost name → LocalHost reason.
-        assert_eq!(safe_fetch("http://localhost/").await, Err("LocalHost".into()));
+        assert_eq!(
+            safe_fetch("http://localhost/").await,
+            Err("LocalHost".into())
+        );
         // Non-http scheme → BadScheme.
-        assert_eq!(safe_fetch("ftp://example.com/").await, Err("BadScheme".into()));
+        assert_eq!(
+            safe_fetch("ftp://example.com/").await,
+            Err("BadScheme".into())
+        );
     }
 
     #[tokio::test]

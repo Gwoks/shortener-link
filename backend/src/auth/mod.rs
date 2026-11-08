@@ -25,9 +25,7 @@ use crate::ids::cuid;
 use crate::models::User;
 use crate::state::AppState;
 
-use extractor::{
-    clear_cookie, cookie_from_header, session_cookie, OptionalUser, SESSION_COOKIE,
-};
+use extractor::{clear_cookie, cookie_from_header, session_cookie, OptionalUser, SESSION_COOKIE};
 use oauth::{Provider, OAUTH_STATE_COOKIE};
 
 pub fn router() -> Router<AppState> {
@@ -65,19 +63,35 @@ async fn register(
     let email_raw = body.email.unwrap_or_default();
     let email = email_raw.trim().to_lowercase();
     let password = body.password.unwrap_or_default();
-    let name = body.name.map(|n| n.trim().to_string()).filter(|n| !n.is_empty());
+    let name = body
+        .name
+        .map(|n| n.trim().to_string())
+        .filter(|n| !n.is_empty());
 
     // registerSchema: valid email, password min 8 / max 200, name max 200.
     if email.is_empty() || !email.contains('@') || email.chars().count() > 320 {
-        return Err(ApiError::validation("email", "Enter a valid email address."));
+        return Err(ApiError::validation(
+            "email",
+            "Enter a valid email address.",
+        ));
     }
     if password.chars().count() < 8 {
-        return Err(ApiError::validation("password", "Use at least 8 characters."));
+        return Err(ApiError::validation(
+            "password",
+            "Use at least 8 characters.",
+        ));
     }
     if password.chars().count() > 200 {
-        return Err(ApiError::validation("password", "That password is too long."));
+        return Err(ApiError::validation(
+            "password",
+            "That password is too long.",
+        ));
     }
-    if name.as_ref().map(|n| n.chars().count() > 200).unwrap_or(false) {
+    if name
+        .as_ref()
+        .map(|n| n.chars().count() > 200)
+        .unwrap_or(false)
+    {
         return Err(ApiError::validation("name", "That name is too long."));
     }
 
@@ -197,10 +211,7 @@ async fn session(OptionalUser(user): OptionalUser) -> Json<serde_json::Value> {
 
 // ─── oauth start ─────────────────────────────────────────────────────────────
 
-async fn oauth_start(
-    State(state): State<AppState>,
-    Path(provider): Path<String>,
-) -> Response {
+async fn oauth_start(State(state): State<AppState>, Path(provider): Path<String>) -> Response {
     let provider = match Provider::parse(&provider) {
         Some(p) => p,
         None => return redirect_to("/signin?error=oauth_unconfigured", None),

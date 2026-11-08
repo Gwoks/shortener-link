@@ -55,6 +55,7 @@ async fn summary(
     Query(q): Query<RangeQuery>,
 ) -> Result<Json<Value>, ApiError> {
     let range = Range::parse(q.range.as_deref());
-    let data = analytics::summary_analytics(&state.pool, &user.id, range, chrono::Utc::now()).await?;
+    let data =
+        analytics::summary_analytics(&state.pool, &user.id, range, chrono::Utc::now()).await?;
     Ok(Json(data))
 }

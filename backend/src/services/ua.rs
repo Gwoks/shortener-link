@@ -124,7 +124,10 @@ mod tests {
 
     #[test]
     fn bots_detected() {
-        assert_eq!(parse("Googlebot/2.1 (+http://www.google.com/bot.html)").0, Some("bot".into()));
+        assert_eq!(
+            parse("Googlebot/2.1 (+http://www.google.com/bot.html)").0,
+            Some("bot".into())
+        );
         assert_eq!(parse("curl/8.1.2").0, Some("bot".into()));
         assert_eq!(parse("facebookexternalhit/1.1").0, Some("bot".into()));
         assert_eq!(parse("WhatsApp/2.0").0, Some("bot".into()));
@@ -162,12 +165,18 @@ mod tests {
     #[test]
     fn desktop_browsers() {
         let chrome = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
-        assert_eq!(parse(chrome), (Some("desktop".into()), Some("Chrome".into())));
+        assert_eq!(
+            parse(chrome),
+            (Some("desktop".into()), Some("Chrome".into()))
+        );
         let ff = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0";
         assert_eq!(parse(ff), (Some("desktop".into()), Some("Firefox".into())));
         let edge = "Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36 Edg/120.0";
         assert_eq!(parse(edge), (Some("desktop".into()), Some("Edge".into())));
         let safari = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15";
-        assert_eq!(parse(safari), (Some("desktop".into()), Some("Safari".into())));
+        assert_eq!(
+            parse(safari),
+            (Some("desktop".into()), Some("Safari".into()))
+        );
     }
 }

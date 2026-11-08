@@ -168,6 +168,9 @@ mod tests {
 
     #[test]
     fn esc_escapes_all_entities() {
-        assert_eq!(esc("<a href=\"x\">&'"), "&lt;a href=&quot;x&quot;&gt;&amp;&#39;");
+        assert_eq!(
+            esc("<a href=\"x\">&'"),
+            "&lt;a href=&quot;x&quot;&gt;&amp;&#39;"
+        );
     }
 }

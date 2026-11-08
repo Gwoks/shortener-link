@@ -32,11 +32,7 @@ fn internal<E: std::fmt::Display>(e: E) -> ApiError {
     ApiError::new(ErrorCode::Internal)
 }
 
-fn png_response(
-    bytes: Vec<u8>,
-    cache_control: &str,
-    download_name: Option<&str>,
-) -> Response {
+fn png_response(bytes: Vec<u8>, cache_control: &str, download_name: Option<&str>) -> Response {
     let mut headers = HeaderMap::new();
     headers.insert(header::CONTENT_TYPE, HeaderValue::from_static("image/png"));
     if let Ok(v) = HeaderValue::from_str(cache_control) {

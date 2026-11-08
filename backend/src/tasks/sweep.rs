@@ -61,7 +61,11 @@ pub async fn run(pool: SqlitePool, cfg: Arc<Config>) {
 ///     guard);
 ///   - prune `click_event` rows with `occurred_at < now - click_retention_days`;
 ///   - delete guest links (`is_guest = 1`) with `created_at < now - guest_ttl_hours`.
-pub async fn sweep_once(pool: &SqlitePool, cfg: &Config, now_ms: i64) -> anyhow::Result<SweepResult> {
+pub async fn sweep_once(
+    pool: &SqlitePool,
+    cfg: &Config,
+    now_ms: i64,
+) -> anyhow::Result<SweepResult> {
     let now = Utc
         .timestamp_millis_opt(now_ms)
         .single()
@@ -263,19 +267,17 @@ mod tests {
         assert_eq!(status_of(&maxed).await, "EXPIRED");
         assert_eq!(status_of(&live).await, "ACTIVE");
 
-        let guest_old_exists: (i64,) =
-            sqlx::query_as("SELECT COUNT(*) FROM link WHERE id = ?")
-                .bind(&guest_old)
-                .fetch_one(&pool)
-                .await
-                .unwrap();
+        let guest_old_exists: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM link WHERE id = ?")
+            .bind(&guest_old)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
         assert_eq!(guest_old_exists.0, 0, "old guest purged");
-        let guest_new_exists: (i64,) =
-            sqlx::query_as("SELECT COUNT(*) FROM link WHERE id = ?")
-                .bind(&guest_new)
-                .fetch_one(&pool)
-                .await
-                .unwrap();
+        let guest_new_exists: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM link WHERE id = ?")
+            .bind(&guest_new)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
         assert_eq!(guest_new_exists.0, 1, "recent guest kept");
 
         let events_left: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM click_event")

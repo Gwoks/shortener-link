@@ -87,7 +87,13 @@ async fn send(
         .iter()
         .filter_map(|v| v.to_str().ok().map(|s| s.to_string()))
         .collect();
-    let bytes = resp.into_body().collect().await.unwrap().to_bytes().to_vec();
+    let bytes = resp
+        .into_body()
+        .collect()
+        .await
+        .unwrap()
+        .to_bytes()
+        .to_vec();
     (status, cookies, bytes)
 }
 
@@ -137,11 +143,26 @@ async fn full_link_lifecycle() {
     let v = json_of(&body);
     let link = &v["link"];
     for key in [
-        "id", "code", "shortUrl", "destinationUrl", "status", "metaStatus", "metaTitle",
-        "metaDescription", "hasPassword", "expiresAt", "maxClicks", "clickCount", "isGuest",
-        "createdAt", "updatedAt",
+        "id",
+        "code",
+        "shortUrl",
+        "destinationUrl",
+        "status",
+        "metaStatus",
+        "metaTitle",
+        "metaDescription",
+        "hasPassword",
+        "expiresAt",
+        "maxClicks",
+        "clickCount",
+        "isGuest",
+        "createdAt",
+        "updatedAt",
     ] {
-        assert!(link.get(key).is_some(), "create link JSON missing key {key}");
+        assert!(
+            link.get(key).is_some(),
+            "create link JSON missing key {key}"
+        );
     }
     assert_eq!(link["destinationUrl"], "https://example.com/page");
     assert_eq!(link["status"], "ACTIVE");
@@ -159,7 +180,14 @@ async fn full_link_lifecycle() {
     assert_eq!(v["items"].as_array().unwrap().len(), 1);
 
     // get
-    let (status, _, body) = send(&app, "GET", &format!("/api/links/{id}"), Some(&session), None).await;
+    let (status, _, body) = send(
+        &app,
+        "GET",
+        &format!("/api/links/{id}"),
+        Some(&session),
+        None,
+    )
+    .await;
     assert_eq!(status, StatusCode::OK);
     assert_eq!(json_of(&body)["link"]["id"], id);
 
@@ -178,11 +206,25 @@ async fn full_link_lifecycle() {
     assert_eq!(v["link"]["maxClicks"], 5);
 
     // delete
-    let (status, _, _) = send(&app, "DELETE", &format!("/api/links/{id}"), Some(&session), None).await;
+    let (status, _, _) = send(
+        &app,
+        "DELETE",
+        &format!("/api/links/{id}"),
+        Some(&session),
+        None,
+    )
+    .await;
     assert_eq!(status, StatusCode::NO_CONTENT);
 
     // get after delete → 404
-    let (status, _, _) = send(&app, "GET", &format!("/api/links/{id}"), Some(&session), None).await;
+    let (status, _, _) = send(
+        &app,
+        "GET",
+        &format!("/api/links/{id}"),
+        Some(&session),
+        None,
+    )
+    .await;
     assert_eq!(status, StatusCode::NOT_FOUND);
 }
 
@@ -200,12 +242,26 @@ async fn check_alias_available_taken_reserved() {
     let session = register_and_login(&app, "alias@example.com").await;
 
     // available
-    let (status, _, body) = send(&app, "GET", "/api/links/check-alias?alias=myfreealias", None, None).await;
+    let (status, _, body) = send(
+        &app,
+        "GET",
+        "/api/links/check-alias?alias=myfreealias",
+        None,
+        None,
+    )
+    .await;
     assert_eq!(status, StatusCode::OK);
     assert_eq!(json_of(&body)["available"], true);
 
     // reserved
-    let (_, _, body) = send(&app, "GET", "/api/links/check-alias?alias=admin", None, None).await;
+    let (_, _, body) = send(
+        &app,
+        "GET",
+        "/api/links/check-alias?alias=admin",
+        None,
+        None,
+    )
+    .await;
     let v = json_of(&body);
     assert_eq!(v["available"], false);
     assert_eq!(v["reason"], "reserved");
@@ -224,7 +280,14 @@ async fn check_alias_available_taken_reserved() {
     )
     .await;
     assert_eq!(status, StatusCode::CREATED);
-    let (_, _, body) = send(&app, "GET", "/api/links/check-alias?alias=takenone", None, None).await;
+    let (_, _, body) = send(
+        &app,
+        "GET",
+        "/api/links/check-alias?alias=takenone",
+        None,
+        None,
+    )
+    .await;
     let v = json_of(&body);
     assert_eq!(v["available"], false);
     assert_eq!(v["reason"], "taken");
@@ -235,7 +298,9 @@ async fn bulk_over_limit_413() {
     let app = setup().await;
     let session = register_and_login(&app, "bulk@example.com").await;
 
-    let urls: Vec<String> = (0..101).map(|i| format!("https://example.com/{i}")).collect();
+    let urls: Vec<String> = (0..101)
+        .map(|i| format!("https://example.com/{i}"))
+        .collect();
     let (status, _, body) = send(
         &app,
         "POST",
@@ -309,7 +374,9 @@ async fn unlock_wrong_then_right() {
     .await;
     assert_eq!(status, StatusCode::OK);
     assert_eq!(json_of(&body)["ok"], true);
-    assert!(cookies.iter().any(|c| c.starts_with(&format!("unlock_{}=", code.to_lowercase()))));
+    assert!(cookies
+        .iter()
+        .any(|c| c.starts_with(&format!("unlock_{}=", code.to_lowercase()))));
 }
 
 #[tokio::test]
