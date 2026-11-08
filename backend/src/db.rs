@@ -32,10 +32,35 @@ pub async fn migrate(pool: &SqlitePool) -> anyhow::Result<()> {
     Ok(())
 }
 
+/// `?,?,…,?` with `n` bind placeholders, for `IN (…)` clauses. Only ever
+/// interpolates literal `?` markers — values are still bound, never formatted.
+pub fn placeholders(n: usize) -> String {
+    vec!["?"; n].join(",")
+}
+
+/// True when a write failed on a UNIQUE / PRIMARY KEY constraint (SQLite
+/// extended codes 2067 / 1555, or the canonical message as a fallback).
+pub fn is_unique_violation(e: &sqlx::Error) -> bool {
+    match e {
+        sqlx::Error::Database(db) => {
+            matches!(db.code().as_deref(), Some("2067") | Some("1555"))
+                || db.message().contains("UNIQUE constraint failed")
+        }
+        _ => false,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::ids::cuid;
+
+    #[test]
+    fn placeholders_builds_comma_separated_markers() {
+        assert_eq!(placeholders(0), "");
+        assert_eq!(placeholders(1), "?");
+        assert_eq!(placeholders(3), "?,?,?");
+    }
 
     #[tokio::test]
     async fn migrate_then_round_trip_link() {

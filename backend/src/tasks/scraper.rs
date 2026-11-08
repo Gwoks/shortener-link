@@ -19,6 +19,7 @@ use tokio::sync::mpsc::UnboundedReceiver;
 use crate::config::Config;
 use crate::queue::ScrapeMsg;
 use crate::services::ssrf::{self, MAX_BODY_BYTES, MAX_REDIRECTS, TIMEOUT_MS};
+use crate::util::now_iso;
 
 /// Run the scrape loop until the channel closes.
 pub async fn run(pool: SqlitePool, _cfg: Arc<Config>, mut rx: UnboundedReceiver<ScrapeMsg>) {
@@ -78,11 +79,6 @@ async fn mark_failed(pool: &SqlitePool, link_id: &str) {
         .bind(link_id)
         .execute(pool)
         .await;
-}
-
-fn now_iso() -> String {
-    use chrono::SecondsFormat;
-    chrono::Utc::now().to_rfc3339_opts(SecondsFormat::Millis, true)
 }
 
 /// Extract title + description from HTML — port of `extractMeta` in scraper.ts.

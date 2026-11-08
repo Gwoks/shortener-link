@@ -7,8 +7,9 @@ use serde::Deserialize;
 use serde_json::Value;
 
 use crate::auth::extractor::CurrentUser;
-use crate::error::{ApiError, ErrorCode};
+use crate::error::ApiError;
 use crate::services::analytics::{self, Range};
+use crate::services::links::load_owned_link;
 use crate::state::AppState;
 
 pub fn router() -> Router<AppState> {
@@ -23,27 +24,13 @@ struct RangeQuery {
     range: Option<String>,
 }
 
-fn internal<E: std::fmt::Display>(e: E) -> ApiError {
-    tracing::error!("analytics route error: {e}");
-    ApiError::new(ErrorCode::Internal)
-}
-
 async fn link_analytics(
     State(state): State<AppState>,
     user: CurrentUser,
     Path(id): Path<String>,
     Query(q): Query<RangeQuery>,
 ) -> Result<Json<Value>, ApiError> {
-    let row: Option<(String, Option<String>)> =
-        sqlx::query_as("SELECT id, owner_id FROM link WHERE id = ?")
-            .bind(&id)
-            .fetch_optional(&state.pool)
-            .await
-            .map_err(internal)?;
-    let (link_id, owner_id) = row.ok_or_else(|| ApiError::new(ErrorCode::NotFound))?;
-    if owner_id.as_deref() != Some(user.id.as_str()) {
-        return Err(ApiError::new(ErrorCode::Forbidden));
-    }
+    let link_id = load_owned_link(&state.pool, &id, &user.id).await?.id;
     let range = Range::parse(q.range.as_deref());
     let data = analytics::link_analytics(&state.pool, &link_id, range, chrono::Utc::now()).await?;
     Ok(Json(data))

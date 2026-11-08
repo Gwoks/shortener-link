@@ -9,7 +9,8 @@ use axum::Router;
 use serde::Deserialize;
 
 use crate::auth::extractor::CurrentUser;
-use crate::error::{ApiError, ErrorCode};
+use crate::error::{internal, ApiError, ErrorCode};
+use crate::services::links::load_owned_link;
 use crate::services::qr::{self, QrSize};
 use crate::services::serialize::short_url_for_code;
 use crate::state::AppState;
@@ -25,11 +26,6 @@ pub fn router() -> Router<AppState> {
 struct QrQuery {
     size: Option<String>,
     download: Option<String>,
-}
-
-fn internal<E: std::fmt::Display>(e: E) -> ApiError {
-    tracing::error!("qr route error: {e}");
-    ApiError::new(ErrorCode::Internal)
 }
 
 fn png_response(bytes: Vec<u8>, cache_control: &str, download_name: Option<&str>) -> Response {
@@ -64,16 +60,8 @@ async fn qr_by_id(
     Path(id): Path<String>,
     Query(q): Query<QrQuery>,
 ) -> Result<Response, ApiError> {
-    let row: Option<(Option<String>, String, Option<String>)> =
-        sqlx::query_as("SELECT owner_id, code, alias_display FROM link WHERE id = ?")
-            .bind(&id)
-            .fetch_optional(&state.pool)
-            .await
-            .map_err(internal)?;
-    let (owner_id, code, alias_display) = row.ok_or_else(|| ApiError::new(ErrorCode::NotFound))?;
-    if owner_id.as_deref() != Some(user.id.as_str()) {
-        return Err(ApiError::new(ErrorCode::Forbidden));
-    }
+    let link = load_owned_link(&state.pool, &id, &user.id).await?;
+    let (code, alias_display) = (link.code, link.alias_display);
 
     let size = size_or_md(q.size.as_deref());
     let download = q.download.as_deref() == Some("1");

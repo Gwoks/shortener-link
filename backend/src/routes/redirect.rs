@@ -8,6 +8,7 @@
 use axum::http::{header, HeaderMap, HeaderValue, StatusCode};
 use axum::response::{IntoResponse, Response};
 
+use crate::auth::extractor::cookie_from_headers;
 use crate::queue::ClickMsg;
 use crate::routes::links::unlock_cookie_name;
 use crate::services::clicker_pages::{dead_link_html, gate_html};
@@ -15,6 +16,7 @@ use crate::services::links::resolve_for_redirect;
 use crate::services::redirect::{resolve, Decision, RedirectContext};
 use crate::services::unlock::verify_token;
 use crate::state::AppState;
+use crate::util::client_ip;
 
 pub const VID_COOKIE: &str = "vid";
 
@@ -38,11 +40,6 @@ fn html_response(body: String, status: StatusCode) -> Response {
         HeaderValue::from_static("private, no-store"),
     );
     (status, headers, body).into_response()
-}
-
-fn cookie_value(headers: &HeaderMap, name: &str) -> Option<String> {
-    let h = headers.get(header::COOKIE).and_then(|v| v.to_str().ok());
-    crate::auth::extractor::cookie_from_header(h, name)
 }
 
 fn random_vid() -> String {
@@ -69,7 +66,7 @@ pub async fn handle_code(state: &AppState, code: &str, headers: &HeaderMap) -> R
 
     let unlocked = match &link_view {
         Some(v) if v.has_password => {
-            let token = cookie_value(headers, &unlock_cookie_name(code));
+            let token = cookie_from_headers(headers, &unlock_cookie_name(code));
             verify_token(token.as_deref(), code, &state.cfg.auth_secret, now)
         }
         _ => false,
@@ -98,7 +95,7 @@ pub async fn handle_code(state: &AppState, code: &str, headers: &HeaderMap) -> R
                 }
             }
 
-            let vid_cookie = cookie_value(headers, VID_COOKIE);
+            let vid_cookie = cookie_from_headers(headers, VID_COOKIE);
 
             // Fire-and-forget click enqueue (never blocks/errs the redirect).
             if let Some(id) = link_id {
@@ -137,22 +134,6 @@ pub async fn handle_code(state: &AppState, code: &str, headers: &HeaderMap) -> R
             resp
         }
     }
-}
-
-fn client_ip(headers: &HeaderMap) -> Option<String> {
-    if let Some(xff) = headers.get("x-forwarded-for").and_then(|v| v.to_str().ok()) {
-        if let Some(first) = xff.split(',').next() {
-            let first = first.trim();
-            if !first.is_empty() {
-                return Some(first.to_string());
-            }
-        }
-    }
-    headers
-        .get("x-real-ip")
-        .and_then(|v| v.to_str().ok())
-        .map(|s| s.trim().to_string())
-        .filter(|s| !s.is_empty())
 }
 
 fn header_str(headers: &HeaderMap, name: header::HeaderName) -> Option<String> {

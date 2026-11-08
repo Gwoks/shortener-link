@@ -2,10 +2,11 @@
 
 use argon2::password_hash::{rand_core::OsRng, PasswordHasher, SaltString};
 use argon2::Argon2;
-use chrono::{Duration, SecondsFormat, Utc};
+use chrono::{Duration, Utc};
 use sqlx::SqlitePool;
 
 use crate::ids::cuid;
+use crate::util::iso;
 
 fn hash_password(password: &str) -> anyhow::Result<String> {
     let salt = SaltString::generate(&mut OsRng);
@@ -14,10 +15,6 @@ fn hash_password(password: &str) -> anyhow::Result<String> {
         .map_err(|e| anyhow::anyhow!("argon2: {e}"))?
         .to_string();
     Ok(hash)
-}
-
-fn iso(dt: chrono::DateTime<Utc>) -> String {
-    dt.to_rfc3339_opts(SecondsFormat::Millis, true)
 }
 
 struct Account {
