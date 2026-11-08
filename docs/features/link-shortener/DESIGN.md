@@ -1,5 +1,7 @@
 # DESIGN: Link Shortener Platform
 
+> **Superseded.** The visual system in this document (indigo accent, dark mode, sidebar shell) has been replaced by the root [`DESIGN.md`](../../../DESIGN.md) (Notion-style warm-paper system, top navigation). Keep this file for the original UX rationale only.
+
 - **Slug:** `link-shortener`
 - **Status:** Draft (design phase)
 - **Author:** Designer (multi-agent pipeline)
