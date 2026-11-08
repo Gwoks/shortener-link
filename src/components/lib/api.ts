@@ -1,8 +1,8 @@
 /**
  * Typed client for the app API (ARCHITECTURE.md §6). Centralizes fetch + the
  * error envelope (§6.3) so every surface gets consistent, recovery-oriented
- * messaging (FR-37). All calls are same-origin; mutations rely on Auth.js CSRF
- * via cookies (credentials: 'same-origin').
+ * messaging (FR-37). All calls are same-origin and carry the session cookie
+ * (credentials: 'same-origin').
  */
 import type {
   AliasCheckResponse,
@@ -83,6 +83,22 @@ async function request<T>(input: string, init?: RequestInit): Promise<T> {
   const ct = res.headers.get('Content-Type') ?? ''
   if (ct.includes('application/json')) return (await res.json()) as T
   return undefined as T
+}
+
+/**
+ * Recovery-oriented message for any thrown value: the server's own message for
+ * an ApiError (already user-facing, FR-37), else the caller's fallback.
+ */
+export function errorMessage(error: unknown, fallback: string): string {
+  return error instanceof ApiError ? error.message : fallback
+}
+
+/**
+ * NOT_FOUND and FORBIDDEN are presented identically, so a link id never
+ * reveals whether someone else owns it.
+ */
+export function isNotFound(error: unknown): boolean {
+  return error instanceof ApiError && (error.code === 'NOT_FOUND' || error.code === 'FORBIDDEN')
 }
 
 export const api = {

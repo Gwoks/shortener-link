@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * Guest result card (DESIGN §5.2, USER-JOURNEY Journey A / §4.2, FR-45, FR-12,
  * FR-14, FR-42, AC-40, AC-47). The output of a guest shorten: the short link in
@@ -46,7 +44,7 @@ export function GuestResultCard({
   return (
     <div className="rounded-lg border border-border bg-surface p-5 sm:p-6">
       <div className="flex items-start justify-between gap-3">
-        <h2 ref={headingRef} tabIndex={-1} className="text-h4 text-text-primary outline-none">
+        <h2 ref={headingRef} tabIndex={-1} className="text-title text-text-primary outline-none">
           Your short link
         </h2>
         {onDismiss && (

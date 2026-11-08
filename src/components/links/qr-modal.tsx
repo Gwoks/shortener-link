@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * QR modal (DESIGN §5.9, USER-JOURNEY §4.7, FR-12/13/14, AC-17/18/19).
  * A centered dialog (bottom sheet on mobile via the shared Dialog primitive,

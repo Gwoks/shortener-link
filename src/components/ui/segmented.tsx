@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * Segmented control / filter pills (DESIGN §4.12). Keyboard-navigable group of
  * toggle buttons. Selected = accent-subtle-bg + accent text. Used for analytics

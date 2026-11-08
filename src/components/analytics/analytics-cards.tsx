@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * Shared breakdown cards (referrers / geography / devices / browsers) used by
  * BOTH the per-link analytics page and the aggregate analytics page. Each card
@@ -9,7 +7,7 @@
  */
 import { formatNumber } from '../lib/format'
 import { ChartCard, DataTable, ProportionBar } from './analytics-primitives'
-import { BreakdownBarChart, DonutChart, type BreakdownDatum } from './charts'
+import { BreakdownBarChart, ClicksOverTimeChart, DonutChart, type BreakdownDatum } from './charts'
 import {
   geoRowLabel,
   percent,
@@ -23,6 +21,101 @@ type Referrers = Array<{ category: string; host: string | null; clicks: number }
 type Geo = Array<{ country: string; city: string | null; clicks: number }>
 type Devices = Array<{ type: string; clicks: number }>
 type Browsers = Array<{ name: string; clicks: number }>
+type Series = Array<{ day: string; clicks: number; uniques: number }>
+
+/** The breakdown fields shared by LinkAnalytics and SummaryAnalytics. */
+export interface Breakdowns {
+  totals: { clicks: number }
+  referrers: Referrers
+  geo: Geo
+  devices: Devices
+  browsers: Browsers
+}
+
+/** YYYY-MM-DD (UTC rollup day) → localized "Mar 4, 2026". */
+export function formatDay(iso: string): string {
+  if (!iso) return '—'
+  const d = new Date(`${iso}T00:00:00Z`)
+  if (Number.isNaN(d.getTime())) return iso
+  return d.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'UTC',
+  })
+}
+
+/** Clicks-over-time chart + accessible per-day table + peak summary. */
+export function ClicksOverTimeCard({
+  series,
+  scope,
+}: {
+  series: Series
+  /** 'link' summarizes across days; 'all' across every link. */
+  scope: 'link' | 'all'
+}) {
+  const empty = series.length === 0 || series.every((s) => s.clicks === 0)
+  const peak = series.reduce((best, s) => (s.clicks > best.clicks ? s : best), {
+    day: '',
+    clicks: 0,
+    uniques: 0,
+  })
+  const across =
+    scope === 'all'
+      ? 'across all links'
+      : `across ${series.length} day${series.length === 1 ? '' : 's'}`
+  return (
+    <ChartCard
+      title="Clicks over time"
+      empty={empty}
+      summary={
+        peak.clicks > 0
+          ? `Peak of ${formatNumber(peak.clicks)} clicks on ${formatDay(peak.day)} ${across}.`
+          : undefined
+      }
+      table={
+        <DataTable
+          caption="Clicks and unique visitors per day"
+          rows={series}
+          rowKey={(r) => r.day}
+          columns={[
+            { key: 'day', header: 'Day', render: (r) => formatDay(r.day) },
+            {
+              key: 'clicks',
+              header: 'Clicks',
+              numeric: true,
+              render: (r) => formatNumber(r.clicks),
+            },
+            {
+              key: 'uniques',
+              header: 'Unique',
+              numeric: true,
+              render: (r) => formatNumber(r.uniques),
+            },
+          ]}
+        />
+      }
+    >
+      <ClicksOverTimeChart data={series} />
+    </ChartCard>
+  )
+}
+
+/** Referrers + devices, then geography + browsers, in a responsive 2-up grid. */
+export function BreakdownGrid({ data }: { data: Breakdowns }) {
+  return (
+    <>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <ReferrersCard referrers={data.referrers} total={data.totals.clicks} />
+        <DevicesCard devices={data.devices} />
+      </div>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <GeoCard geo={data.geo} total={data.totals.clicks} />
+        <BrowsersCard browsers={data.browsers} />
+      </div>
+    </>
+  )
+}
 
 export function ReferrersCard({ referrers, total }: { referrers: Referrers; total: number }) {
   const empty = referrers.length === 0

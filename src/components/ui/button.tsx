@@ -1,8 +1,10 @@
-'use client'
-
 /**
- * Button (DESIGN §4.1). Variants: primary/secondary/ghost/danger/link.
- * Sizes: sm(28)/md(36)/lg(44). Loading state preserves width and sets aria-busy,
+ * Button (DESIGN.md §Components). Variants map 1:1 to the spec:
+ *   primary   → Primary CTA (the single filled blue action per screen)
+ *   secondary → Ghost CTA (sky-tint wash, blue label)
+ *   ghost     → Ghost Text (no fill, ink label)
+ *   outline   → Outlined Text (1px ink border, 4px radius, compact)
+ * plus danger (destructive confirm) and link. Loading state sets aria-busy,
  * swapping a leading spinner for the icon while keeping the label. Icon buttons
  * always require an aria-label (enforced by usage, not types).
  */
@@ -13,20 +15,20 @@ import { cn } from '../lib/cn'
 import { Spinner } from './spinner'
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-sm font-medium transition-colors duration-fast ease-standard disabled:cursor-not-allowed disabled:bg-surface-subtle disabled:text-text-tertiary disabled:shadow-none',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-sm font-medium transition-colors duration-base ease-standard disabled:cursor-not-allowed disabled:opacity-50',
   {
     variants: {
       variant: {
         primary: 'bg-accent text-text-on-accent hover:bg-accent-hover',
-        secondary:
-          'border border-border-strong bg-surface text-text-primary hover:bg-surface-hover',
-        ghost: 'text-text-secondary hover:bg-surface-hover hover:text-text-primary',
+        secondary: 'bg-accent-subtle-bg text-accent hover:bg-accent-subtle-hover',
+        ghost: 'text-text-primary hover:bg-surface-hover',
+        outline: 'rounded-xs border border-ink text-text-primary hover:bg-surface-hover',
         danger: 'bg-danger-fg text-white hover:opacity-90',
         link: 'h-auto p-0 text-accent underline-offset-4 hover:underline',
       },
       size: {
-        sm: 'h-7 px-3 text-body-sm',
-        md: 'h-9 px-4 text-body-sm',
+        sm: 'h-7 px-2.5 text-body-sm',
+        md: 'h-8 px-[15px] text-body-sm',
         lg: 'h-11 px-5 text-body',
         icon: 'h-9 w-9 p-0',
         'icon-sm': 'h-7 w-7 p-0',
@@ -63,7 +65,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
         children
       ) : (
         <>
-          {loading && <Spinner className="h-4 w-4" />}
+          {loading && <Spinner className="h-4 w-4" decorative />}
           {children}
         </>
       )}

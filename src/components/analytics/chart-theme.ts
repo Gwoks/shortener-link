@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * Chart theming + motion bridge (NFR-13, AC-50). Recharts needs real color
  * strings (not Tailwind classes), so we read the categorical palette and

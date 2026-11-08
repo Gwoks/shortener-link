@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * UTM builder (DESIGN §5.5 item 3, FR-22/23, AC-30). A collapsible group of the
  * five standard UTM fields plus a LIVE preview of the assembled destination URL

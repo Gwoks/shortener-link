@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * Bulk shortening controller (DESIGN §5.6, USER-JOURNEY Journey D, FR-24/25/26,
  * NFR-4, AC-31/32/33/34). A mono textarea (one URL per line) with a live counter
@@ -16,9 +14,12 @@
 import { ListChecks, Trash2 } from 'lucide-react'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { PageHeader } from '../app/app-shell'
-import { api, ApiError } from '../lib/api'
+import { useInvalidateLinks } from '@/data/links'
+import { api, errorMessage } from '../lib/api'
 import type { BulkResultRow } from '../lib/types'
 import { Button } from '../ui/button'
+import { Card } from '../ui/card'
+import { StateCard } from '../ui/state-card'
 import { Textarea } from '../ui/input'
 import { useToast } from '../ui/toast'
 import { BulkResults } from './bulk-results'
@@ -47,6 +48,7 @@ type RunState =
 
 export function BulkPage() {
   const { success, error } = useToast()
+  const invalidateLinks = useInvalidateLinks()
   const [text, setText] = useState('')
   const [state, setState] = useState<RunState>({ phase: 'idle' })
   // Monotonic token so a slow batch can't overwrite a newer run.
@@ -74,6 +76,7 @@ export function BulkPage() {
       const res = await api.bulk(urls)
       if (id !== reqId.current) return
       setState({ phase: 'done', results: res.results, submittedAt: Date.now() })
+      void invalidateLinks()
       const okCount = res.results.filter((r) => r.ok).length
       const failCount = res.results.length - okCount
       if (failCount === 0) {
@@ -87,14 +90,14 @@ export function BulkPage() {
       }
     } catch (e) {
       if (id !== reqId.current) return
-      const message =
-        e instanceof ApiError
-          ? e.message
-          : 'We couldn’t reach the server. Check your connection and try again.'
+      const message = errorMessage(
+        e,
+        'We couldn’t reach the server. Check your connection and try again.',
+      )
       setState({ phase: 'error', message })
       error('Couldn’t shorten the batch', message)
     }
-  }, [submitting, empty, overLimit, urls, success, error])
+  }, [submitting, empty, overLimit, urls, success, error, invalidateLinks])
 
   const clearAll = useCallback(() => {
     setText('')
@@ -114,10 +117,7 @@ export function BulkPage() {
 
       <div className="mx-auto w-full max-w-3xl space-y-6">
         {/* ── Input panel ── */}
-        <section
-          className="rounded-md border border-border bg-surface p-5 sm:p-6"
-          aria-label="Bulk input"
-        >
+        <Card as="section" aria-label="Bulk input">
           <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
             <label htmlFor="bulk-urls" className="text-body-sm font-medium text-text-primary">
               Paste URLs — one per line
@@ -173,34 +173,29 @@ export function BulkPage() {
               The whole batch counts as one shorten request.
             </p>
           </div>
-        </section>
+        </Card>
 
         {/* ── Results / states ── */}
         {state.phase === 'submitting' && (
-          <div
-            role="status"
-            className="rounded-md border border-border bg-surface px-6 py-12 text-center"
-          >
+          <Card padding="none" role="status" className="px-6 py-12 text-center">
             <span className="sr-only">Shortening your batch…</span>
             <p className="text-body-sm text-text-secondary" aria-hidden="true">
               Shortening {count} {count === 1 ? 'URL' : 'URLs'}…
             </p>
-          </div>
+          </Card>
         )}
 
         {state.phase === 'error' && (
-          <div
-            role="alert"
-            className="rounded-md border border-border bg-danger-bg/40 px-6 py-10 text-center"
-          >
-            <h3 className="text-h4 text-text-primary">Couldn’t shorten the batch</h3>
-            <p className="mx-auto mt-1.5 max-w-sm text-body-sm text-text-secondary">
-              {state.message}
-            </p>
-            <Button type="button" variant="secondary" className="mt-5" onClick={run}>
-              Try again
-            </Button>
-          </div>
+          <StateCard
+            tone="error"
+            title="Couldn’t shorten the batch"
+            description={state.message}
+            actions={
+              <Button type="button" variant="secondary" onClick={run}>
+                Try again
+              </Button>
+            }
+          />
         )}
 
         {state.phase === 'done' && <BulkResults results={state.results} />}

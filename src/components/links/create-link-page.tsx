@@ -1,11 +1,10 @@
-'use client'
-
 /**
  * Create-link page controller (DESIGN §5.5, USER-JOURNEY §4.3). Renders the
  * shared LinkForm in "create" mode inside the standard content column. On success
  * it swaps the form for the result card (short link + copy + inline QR, §5.5
  * success) without navigating away, so the user can copy/QR or create another.
  */
+import { Card } from '../ui/card'
 import { ArrowLeft } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
@@ -46,14 +45,14 @@ export function CreateLinkPage() {
             }}
           />
         ) : (
-          <div className="rounded-md border border-border bg-surface p-5 sm:p-6">
+          <Card>
             <LinkForm
               key={formKey}
               mode="create"
               onCreated={(link) => setCreated(link)}
               onCancel={() => navigate('/dashboard')}
             />
-          </div>
+          </Card>
         )}
       </div>
     </div>

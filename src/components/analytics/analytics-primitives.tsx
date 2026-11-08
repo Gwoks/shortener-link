@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * Shared analytics building blocks (DESIGN §5.7/§5.8, AC-49/AC-16, FR-11/43).
  * Each chart is wrapped in a `ChartCard` that pairs the visual with an accessible
@@ -11,6 +9,7 @@ import { Link } from 'react-router-dom'
 import { AlertTriangle, BarChart3, Table2, type LucideIcon } from 'lucide-react'
 import { useId, useState } from 'react'
 import { cn } from '../lib/cn'
+import { Card, cardVariants } from '../ui/card'
 import { formatNumber } from '../lib/format'
 import { Button } from '../ui/button'
 import { Skeleton } from '../ui/skeleton'
@@ -28,14 +27,14 @@ export function StatCard({
   icon?: LucideIcon
 }) {
   return (
-    <div className="rounded-md border border-border bg-surface p-4">
+    <Card padding="sm">
       <div className="flex items-center gap-1.5 text-caption font-medium text-text-tertiary">
         {Icon && <Icon className="h-3.5 w-3.5" aria-hidden="true" />}
         <span>{label}</span>
       </div>
-      <div className="mt-1.5 text-h2 tabular-nums text-text-primary">{value}</div>
+      <div className="mt-1.5 text-heading-sm tabular-nums text-text-primary">{value}</div>
       {hint && <div className="mt-0.5 text-caption text-text-tertiary">{hint}</div>}
-    </div>
+    </Card>
   )
 }
 
@@ -164,14 +163,11 @@ export function ChartCard({
   return (
     <section
       aria-label={title}
-      className={cn(
-        'flex flex-col rounded-md border border-border bg-surface p-4 sm:p-5',
-        className,
-      )}
+      className={cn(cardVariants({ padding: 'sm' }), 'flex flex-col sm:p-5', className)}
     >
       <div className="mb-3 flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h3 className="text-h4 text-text-primary">{title}</h3>
+          <h3 className="text-title text-text-primary">{title}</h3>
           {summary && !empty && !error && (
             <p className="mt-0.5 text-caption text-text-secondary">{summary}</p>
           )}
@@ -260,7 +256,7 @@ export function AnalyticsEmptyState({
       <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-pill bg-surface-subtle text-text-tertiary">
         <BarChart3 className="h-6 w-6" aria-hidden="true" />
       </span>
-      <h3 className="text-h4 text-text-primary">{title}</h3>
+      <h3 className="text-title text-text-primary">{title}</h3>
       <p className="mt-1.5 max-w-sm text-body-sm text-text-secondary">{description}</p>
       {cta && (
         <Button asChild className="mt-5">
@@ -303,10 +299,10 @@ export function StatGridSkeleton({ count = 4 }: { count?: number }) {
   return (
     <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="rounded-md border border-border bg-surface p-4">
+        <Card padding="sm" key={i}>
           <Skeleton className="h-3 w-20" />
           <Skeleton className="mt-3 h-7 w-24" />
-        </div>
+        </Card>
       ))}
     </div>
   )
@@ -315,10 +311,10 @@ export function StatGridSkeleton({ count = 4 }: { count?: number }) {
 /** Skeleton standing in for a chart card while data loads (FR-43). */
 export function ChartCardSkeleton({ height = 240 }: { height?: number }) {
   return (
-    <div className="rounded-md border border-border bg-surface p-4 sm:p-5">
+    <Card padding="sm" className="sm:p-5">
       <Skeleton className="h-4 w-40" />
       <Skeleton className="mt-1.5 h-3 w-56" />
       <div className="skeleton mt-4 w-full rounded-sm" style={{ height }} aria-hidden="true" />
-    </div>
+    </Card>
   )
 }

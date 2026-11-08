@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * Custom-alias field (DESIGN §5.5 item 2, USER-JOURNEY §4.4, FR-2/3/44, AC-4/5).
  * Sits on the IA boundary (alias namespace == app route namespace), so it must

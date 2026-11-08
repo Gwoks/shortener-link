@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * Guest landing hero (DESIGN §5.1, USER-JOURNEY Journey A / §4.1, FR-32/45/5/35/
  * 36, AC-40/43/44). A focused, single-purpose hero (A-LANDING): paste a long URL
@@ -15,28 +13,17 @@
  * An optional "advanced" disclosure exposes an at-creation expiry affordance even
  * for guests (FR-32) — a shorter expiry within the 24h guest window.
  */
-import { AlertTriangle, ChevronDown, Link2 } from 'lucide-react'
+import { ChevronDown, Link2 } from 'lucide-react'
 import { useCallback, useId, useRef, useState } from 'react'
 import { api, ApiError } from '../lib/api'
 import { localInputToIso, nowLocalInput } from '../lib/format'
 import type { CreateLinkPayload, LinkResource } from '../lib/types'
 import { isValidHttpUrl } from '../lib/url-check'
+import { InlineAlert } from '../ui/alert'
 import { Button } from '../ui/button'
+import { Card } from '../ui/card'
 import { Input } from '../ui/input'
 import { GuestResultCard } from './guest-result-card'
-
-/** Inline, persistent alert for rate-limit / blocklist explanations (DESIGN §4.9). */
-function InlineAlert({ children }: { children: React.ReactNode }) {
-  return (
-    <div
-      role="alert"
-      className="flex items-start gap-2 rounded-sm border border-danger-fg/40 bg-danger-bg px-3 py-2.5 text-body-sm text-danger-fg"
-    >
-      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-      <div className="min-w-0">{children}</div>
-    </div>
-  )
-}
 
 export function GuestHero() {
   const [url, setUrl] = useState('')
@@ -133,109 +120,104 @@ export function GuestHero() {
   )
 
   return (
-    <section className="w-full">
-      <div className="text-center">
-        <h1 className="text-balance text-h1 font-bold text-text-primary sm:text-display">
-          Shorten any link in seconds.
-        </h1>
-        <p className="mx-auto mt-3 max-w-prose text-body text-text-secondary">
-          Free, fast, and private. No account needed.
-        </p>
-      </div>
-
-      <form onSubmit={onSubmit} noValidate className="mt-8">
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <div className="relative min-w-0 flex-1">
-            <Link2
-              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary"
-              aria-hidden="true"
-            />
-            <label htmlFor="guest-url" className="sr-only">
-              Paste a long URL to shorten
-            </label>
-            <Input
-              ref={inputRef}
-              id="guest-url"
-              type="url"
-              inputMode="url"
-              autoComplete="url"
-              autoFocus
-              mono
-              placeholder="Paste a long URL…"
-              value={url}
-              disabled={submitting}
-              invalid={!!fieldError}
-              aria-describedby={`${fieldError ? fieldErrId : ''} ${helperId}`.trim() || undefined}
-              onChange={(e) => {
-                setUrl(e.target.value)
-                if (fieldError) setFieldError(null)
-              }}
-              className="h-11 pl-9 text-body"
-            />
-          </div>
-          <Button type="submit" size="lg" loading={submitting} className="sm:w-auto sm:px-6">
-            Shorten
-          </Button>
-        </div>
-
-        {/* Inline field error (invalid URL) — announced via role=alert. */}
-        {fieldError && (
-          <p id={fieldErrId} role="alert" className="mt-2 text-body-sm text-danger-fg">
-            {fieldError}
-          </p>
-        )}
-
-        {/* Quiet helper that sets the 24h expectation up front (DESIGN §5.1). */}
-        <p id={helperId} className="mt-2 text-body-sm text-text-tertiary">
-          Links you create here expire in 24 hours.
-        </p>
-
-        {/* At-creation expiry affordance for guests (FR-32). */}
-        <div className="mt-3">
-          <button
-            type="button"
-            aria-expanded={advancedOpen}
-            aria-controls={advancedId}
-            onClick={() => setAdvancedOpen((o) => !o)}
-            className="inline-flex items-center gap-1 rounded-sm text-body-sm font-medium text-text-secondary transition-colors hover:text-text-primary"
-          >
-            <ChevronDown
-              className={`h-4 w-4 transition-transform duration-fast ${advancedOpen ? 'rotate-180' : ''}`}
-              aria-hidden="true"
-            />
-            Advanced
-          </button>
-          {advancedOpen && (
-            <div id={advancedId} className="mt-3 rounded-md border border-border bg-surface p-4">
-              <label
-                htmlFor="guest-expiry"
-                className="block text-body-sm font-medium text-text-primary"
-              >
-                Expire sooner <span className="font-normal text-text-tertiary">(optional)</span>
+    <div className="w-full">
+      {/* The shorten form is the hero's "product mockup" — the one surface on
+          the page that carries the mockup shadow (DESIGN §Elevation). */}
+      <Card className="shadow-mockup" padding="sm">
+        <form onSubmit={onSubmit} noValidate>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <div className="relative min-w-0 flex-1">
+              <Link2
+                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary"
+                aria-hidden="true"
+              />
+              <label htmlFor="guest-url" className="sr-only">
+                Paste a long URL to shorten
               </label>
               <Input
-                id="guest-expiry"
-                type="datetime-local"
-                min={nowLocalInput()}
-                value={expiresAt}
+                ref={inputRef}
+                id="guest-url"
+                type="url"
+                inputMode="url"
+                autoComplete="url"
+                autoFocus
+                mono
+                placeholder="Paste a long URL…"
+                value={url}
                 disabled={submitting}
-                onChange={(e) => setExpiresAt(e.target.value)}
-                className="mt-1.5"
+                invalid={!!fieldError}
+                aria-describedby={`${fieldError ? fieldErrId : ''} ${helperId}`.trim() || undefined}
+                onChange={(e) => {
+                  setUrl(e.target.value)
+                  if (fieldError) setFieldError(null)
+                }}
+                className="h-11 pl-9 text-body"
               />
-              <p className="mt-1.5 text-caption text-text-tertiary">
-                Set a time within the next 24 hours. Leave blank to use the full 24-hour window.
-              </p>
+            </div>
+            <Button type="submit" size="lg" loading={submitting} className="sm:w-auto sm:px-6">
+              Shorten
+            </Button>
+          </div>
+
+          {/* Inline field error (invalid URL) — announced via role=alert. */}
+          {fieldError && (
+            <p id={fieldErrId} role="alert" className="mt-2 text-body-sm text-danger-fg">
+              {fieldError}
+            </p>
+          )}
+
+          {/* Quiet helper that sets the 24h expectation up front (DESIGN §5.1). */}
+          <p id={helperId} className="mt-2 text-body-sm text-text-tertiary">
+            Links you create here expire in 24 hours.
+          </p>
+
+          {/* At-creation expiry affordance for guests (FR-32). */}
+          <div className="mt-3">
+            <button
+              type="button"
+              aria-expanded={advancedOpen}
+              aria-controls={advancedId}
+              onClick={() => setAdvancedOpen((o) => !o)}
+              className="inline-flex items-center gap-1 rounded-sm text-body-sm font-medium text-text-secondary transition-colors hover:text-text-primary"
+            >
+              <ChevronDown
+                className={`h-4 w-4 transition-transform duration-fast ${advancedOpen ? 'rotate-180' : ''}`}
+                aria-hidden="true"
+              />
+              Advanced
+            </button>
+            {advancedOpen && (
+              <div id={advancedId} className="mt-3 rounded-sm bg-canvas p-4">
+                <label
+                  htmlFor="guest-expiry"
+                  className="block text-body-sm font-medium text-text-primary"
+                >
+                  Expire sooner <span className="font-normal text-text-tertiary">(optional)</span>
+                </label>
+                <Input
+                  id="guest-expiry"
+                  type="datetime-local"
+                  min={nowLocalInput()}
+                  value={expiresAt}
+                  disabled={submitting}
+                  onChange={(e) => setExpiresAt(e.target.value)}
+                  className="mt-1.5"
+                />
+                <p className="mt-1.5 text-caption text-text-tertiary">
+                  Set a time within the next 24 hours. Leave blank to use the full 24-hour window.
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Persistent alert for rate-limit / blocklist (FR-35/36). */}
+          {alert && (
+            <div className="mt-4">
+              <InlineAlert>{alert}</InlineAlert>
             </div>
           )}
-        </div>
-
-        {/* Persistent alert for rate-limit / blocklist (FR-35/36). */}
-        {alert && (
-          <div className="mt-4">
-            <InlineAlert>{alert}</InlineAlert>
-          </div>
-        )}
-      </form>
+        </form>
+      </Card>
 
       {/* Result cards (most-recent-first). aria-live announces newly added links. */}
       {results.length > 0 && (
@@ -249,6 +231,6 @@ export function GuestHero() {
           ))}
         </div>
       )}
-    </section>
+    </div>
   )
 }

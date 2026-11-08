@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * Links list toolbar (DESIGN §4.12/§5.4, FR-29). Search box (debounced),
  * status filter pills (Segmented), and a sort control (native <select> for

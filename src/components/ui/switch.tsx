@@ -1,5 +1,3 @@
-'use client'
-
 /** Switch/toggle (DESIGN §4.2). Radix Switch — role=switch, visible focus, on=accent. */
 import * as SwitchPrimitive from '@radix-ui/react-switch'
 import { forwardRef } from 'react'
@@ -19,7 +17,7 @@ export const Switch = forwardRef<
       )}
       {...props}
     >
-      <SwitchPrimitive.Thumb className="pointer-events-none block h-4 w-4 translate-x-0.5 rounded-full bg-white shadow-sm transition-transform duration-fast data-[state=checked]:translate-x-[18px]" />
+      <SwitchPrimitive.Thumb className="pointer-events-none block h-4 w-4 translate-x-0.5 rounded-full bg-white shadow-nav transition-transform duration-fast data-[state=checked]:translate-x-[18px]" />
     </SwitchPrimitive.Root>
   )
 })

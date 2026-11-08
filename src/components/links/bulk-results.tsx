@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * Bulk results table (DESIGN §5.6, FR-25/26, AC-31/32/33). One row per input with
  * partial-success semantics: successful rows show the short link + a per-row copy
@@ -14,6 +12,7 @@
 import { CheckCircle2, Copy, Download, ExternalLink, XCircle } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
 import { cn } from '../lib/cn'
+import { Card, cardVariants } from '../ui/card'
 import { displayDestination } from '../lib/format'
 import type { BulkResultRow } from '../lib/types'
 import { Button } from '../ui/button'
@@ -156,7 +155,7 @@ export function BulkResults({ results }: { results: BulkResultRow[] }) {
       {/* Header: summary + batch actions */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <h3 className="text-h4 text-text-primary">Results</h3>
+          <h3 className="text-title text-text-primary">Results</h3>
           <p className="mt-0.5 text-body-sm text-text-secondary" role="status">
             {okCount} succeeded
             {failCount > 0 ? `, ${failCount} failed` : ''} · {results.length} total
@@ -184,17 +183,17 @@ export function BulkResults({ results }: { results: BulkResultRow[] }) {
       </div>
 
       {/* Desktop table */}
-      <div className="hidden overflow-hidden rounded-md border border-border bg-surface md:block">
+      <Card padding="none" className="hidden overflow-hidden md:block">
         <table className="w-full border-collapse text-left">
           <thead className="border-b border-border bg-surface-subtle">
             <tr>
-              <th scope="col" className="px-3 py-2.5 text-overline uppercase text-text-tertiary">
+              <th scope="col" className="px-3 py-2.5 text-eyebrow uppercase text-text-tertiary">
                 Input URL
               </th>
-              <th scope="col" className="px-3 py-2.5 text-overline uppercase text-text-tertiary">
+              <th scope="col" className="px-3 py-2.5 text-eyebrow uppercase text-text-tertiary">
                 Result
               </th>
-              <th scope="col" className="px-3 py-2.5 text-overline uppercase text-text-tertiary">
+              <th scope="col" className="px-3 py-2.5 text-eyebrow uppercase text-text-tertiary">
                 Status
               </th>
             </tr>
@@ -203,10 +202,7 @@ export function BulkResults({ results }: { results: BulkResultRow[] }) {
             {results.map((row, i) => (
               <tr
                 key={`${row.input}-${i}`}
-                className={cn(
-                  'border-b border-border last:border-b-0',
-                  row.ok ? '' : 'bg-danger-bg/30',
-                )}
+                className={cn('border-b border-border last:border-b-0', !row.ok && 'bg-danger-bg')}
               >
                 <td className="max-w-[1px] px-3 py-3 align-middle">
                   <span
@@ -226,20 +222,17 @@ export function BulkResults({ results }: { results: BulkResultRow[] }) {
             ))}
           </tbody>
         </table>
-      </div>
+      </Card>
 
       {/* Mobile stacked cards */}
       <ul className="space-y-3 md:hidden">
         {results.map((row, i) => (
           <li
             key={`${row.input}-${i}`}
-            className={cn(
-              'rounded-md border border-border bg-surface p-4',
-              row.ok ? '' : 'border-danger-fg/30 bg-danger-bg/30',
-            )}
+            className={cn(cardVariants({ padding: 'sm' }), !row.ok && 'bg-danger-bg')}
           >
             <div className="flex items-center justify-between gap-2">
-              <span className="text-overline uppercase text-text-tertiary">Input</span>
+              <span className="text-eyebrow uppercase text-text-tertiary">Input</span>
               <StatusCell ok={row.ok} />
             </div>
             <p
@@ -249,7 +242,7 @@ export function BulkResults({ results }: { results: BulkResultRow[] }) {
               {displayDestination(row.input)}
             </p>
             <div className="mt-3 border-t border-border pt-3">
-              <span className="text-overline uppercase text-text-tertiary">Result</span>
+              <span className="text-eyebrow uppercase text-text-tertiary">Result</span>
               <div className="mt-1">
                 <ResultValue row={row} />
               </div>

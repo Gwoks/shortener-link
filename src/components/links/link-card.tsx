@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * Mobile stacked card (DESIGN §4.5/§5.4, NFR-17, AC-51). The table degrades to
  * these cards below the table breakpoint — never a horizontal scroll. Line 1:
@@ -8,6 +6,7 @@
  * kebab. The whole card links to per-link analytics; inner controls stop
  * propagation.
  */
+import { Card } from '../ui/card'
 import { ExternalLink } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { absoluteTime, displayDestination, formatNumber, relativeTime } from '../lib/format'
@@ -27,7 +26,8 @@ export function LinkCard({
   const analyticsHref = `/dashboard/links/${link.id}/analytics`
 
   return (
-    <div
+    <Card
+      padding="sm"
       role="link"
       tabIndex={0}
       aria-label={`${link.shortUrl}, ${formatNumber(link.clickCount)} clicks`}
@@ -42,7 +42,7 @@ export function LinkCard({
           navigate(analyticsHref)
         }
       }}
-      className="cursor-pointer rounded-md border border-border bg-surface p-4 transition-colors hover:bg-surface-hover focus-visible:bg-surface-hover"
+      className="cursor-pointer transition-colors hover:bg-surface-hover focus-visible:bg-surface-hover"
     >
       <div className="flex items-start justify-between gap-3">
         <a
@@ -85,6 +85,6 @@ export function LinkCard({
           <LinkRowActions link={link} onDelete={onDelete} />
         </div>
       </div>
-    </div>
+    </Card>
   )
 }
