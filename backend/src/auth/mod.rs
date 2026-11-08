@@ -20,10 +20,11 @@ use axum::{Json, Router};
 use serde::Deserialize;
 use serde_json::json;
 
-use crate::error::{ApiError, ErrorCode};
+use crate::error::{internal, ApiError, ErrorCode};
 use crate::ids::cuid;
 use crate::models::User;
 use crate::state::AppState;
+use crate::util::now_iso;
 
 use extractor::{clear_cookie, cookie_from_header, session_cookie, OptionalUser, SESSION_COOKIE};
 use oauth::{Provider, OAUTH_STATE_COOKIE};
@@ -36,11 +37,6 @@ pub fn router() -> Router<AppState> {
         .route("/api/session", get(session))
         .route("/api/auth/oauth/:provider", get(oauth_start))
         .route("/api/auth/oauth/:provider/callback", get(oauth_callback))
-}
-
-fn now_iso() -> String {
-    use chrono::SecondsFormat;
-    chrono::Utc::now().to_rfc3339_opts(SecondsFormat::Millis, true)
 }
 
 // ─── register ────────────────────────────────────────────────────────────────
@@ -352,11 +348,6 @@ async fn upsert_oauth_user(
 }
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
-
-fn internal<E: std::fmt::Display>(e: E) -> ApiError {
-    tracing::error!("auth internal error: {e}");
-    ApiError::new(ErrorCode::Internal)
-}
 
 /// Attach a Set-Cookie header to a response.
 fn with_cookie(mut resp: Response, cookie: &str) -> Response {

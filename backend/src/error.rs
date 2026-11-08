@@ -125,6 +125,13 @@ pub struct ApiError {
     pub retry_after: Option<i64>,
 }
 
+/// Log an unexpected failure server-side and map it to the generic INTERNAL
+/// envelope — never leaks the underlying error text to the client.
+pub fn internal<E: std::fmt::Display>(e: E) -> ApiError {
+    tracing::error!(error = %e, "internal error");
+    ApiError::new(ErrorCode::Internal)
+}
+
 impl ApiError {
     /// Build with the code's default message.
     pub fn new(code: ErrorCode) -> Self {

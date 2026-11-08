@@ -13,10 +13,11 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use chrono::{SecondsFormat, TimeZone, Utc};
+use chrono::{TimeZone, Utc};
 use sqlx::SqlitePool;
 
 use crate::config::Config;
+use crate::util::iso;
 
 /// Match the oracle's `SWEEP_INTERVAL_MS = 60_000`.
 pub const SWEEP_INTERVAL_MS: u64 = 60_000;
@@ -70,7 +71,7 @@ pub async fn sweep_once(
         .timestamp_millis_opt(now_ms)
         .single()
         .unwrap_or_else(Utc::now);
-    let now_iso = now.to_rfc3339_opts(SecondsFormat::Millis, true);
+    let now_iso = iso(now);
 
     // 1) Expire due links (timed expiry or max-clicks reached).
     let expired = sqlx::query(
@@ -89,8 +90,7 @@ pub async fn sweep_once(
     .rows_affected();
 
     // 2) Prune old click_event rows past the retention window.
-    let retention_cutoff = (now - chrono::Duration::days(cfg.click_retention_days))
-        .to_rfc3339_opts(SecondsFormat::Millis, true);
+    let retention_cutoff = iso(now - chrono::Duration::days(cfg.click_retention_days));
     let events_pruned = sqlx::query("DELETE FROM click_event WHERE occurred_at < ?")
         .bind(&retention_cutoff)
         .execute(pool)
@@ -98,8 +98,7 @@ pub async fn sweep_once(
         .rows_affected();
 
     // 3) Purge guest links past their TTL.
-    let guest_cutoff = (now - chrono::Duration::hours(cfg.guest_ttl_hours))
-        .to_rfc3339_opts(SecondsFormat::Millis, true);
+    let guest_cutoff = iso(now - chrono::Duration::hours(cfg.guest_ttl_hours));
     let guests_purged = sqlx::query("DELETE FROM link WHERE is_guest = 1 AND created_at < ?")
         .bind(&guest_cutoff)
         .execute(pool)
@@ -131,11 +130,8 @@ mod tests {
         c
     }
 
-    fn iso(ms: i64) -> String {
-        Utc.timestamp_millis_opt(ms)
-            .single()
-            .unwrap()
-            .to_rfc3339_opts(SecondsFormat::Millis, true)
+    fn iso_ms(ms: i64) -> String {
+        crate::util::iso(Utc.timestamp_millis_opt(ms).single().unwrap())
     }
 
     #[tokio::test]
@@ -156,9 +152,9 @@ mod tests {
         .bind(&timed)
         .bind("timed1")
         .bind("https://e.com")
-        .bind(iso(now_ms - hour)) // expired an hour ago
-        .bind(iso(now_ms - day))
-        .bind(iso(now_ms - day))
+        .bind(iso_ms(now_ms - hour)) // expired an hour ago
+        .bind(iso_ms(now_ms - day))
+        .bind(iso_ms(now_ms - day))
         .execute(&pool)
         .await
         .unwrap();
@@ -172,8 +168,8 @@ mod tests {
         .bind(&maxed)
         .bind("maxed1")
         .bind("https://e.com")
-        .bind(iso(now_ms - day))
-        .bind(iso(now_ms - day))
+        .bind(iso_ms(now_ms - day))
+        .bind(iso_ms(now_ms - day))
         .execute(&pool)
         .await
         .unwrap();
@@ -187,9 +183,9 @@ mod tests {
         .bind(&live)
         .bind("live01")
         .bind("https://e.com")
-        .bind(iso(now_ms + day))
-        .bind(iso(now_ms - day))
-        .bind(iso(now_ms - day))
+        .bind(iso_ms(now_ms + day))
+        .bind(iso_ms(now_ms - day))
+        .bind(iso_ms(now_ms - day))
         .execute(&pool)
         .await
         .unwrap();
@@ -203,8 +199,8 @@ mod tests {
         .bind(&guest_old)
         .bind("guold1")
         .bind("https://e.com")
-        .bind(iso(now_ms - 25 * hour))
-        .bind(iso(now_ms - 25 * hour))
+        .bind(iso_ms(now_ms - 25 * hour))
+        .bind(iso_ms(now_ms - 25 * hour))
         .execute(&pool)
         .await
         .unwrap();
@@ -218,8 +214,8 @@ mod tests {
         .bind(&guest_new)
         .bind("gunew1")
         .bind("https://e.com")
-        .bind(iso(now_ms - hour))
-        .bind(iso(now_ms - hour))
+        .bind(iso_ms(now_ms - hour))
+        .bind(iso_ms(now_ms - hour))
         .execute(&pool)
         .await
         .unwrap();
@@ -231,7 +227,7 @@ mod tests {
         )
         .bind(cuid())
         .bind(&live)
-        .bind(iso(now_ms - 450 * day))
+        .bind(iso_ms(now_ms - 450 * day))
         .execute(&pool)
         .await
         .unwrap();
@@ -241,7 +237,7 @@ mod tests {
         )
         .bind(cuid())
         .bind(&live)
-        .bind(iso(now_ms - day))
+        .bind(iso_ms(now_ms - day))
         .execute(&pool)
         .await
         .unwrap();

@@ -16,7 +16,7 @@
 
 use std::sync::Arc;
 
-use chrono::{DateTime, Datelike, SecondsFormat, TimeZone, Utc};
+use chrono::{DateTime, Datelike, TimeZone, Utc};
 use serde_json::{Map, Value};
 use sqlx::SqlitePool;
 use tokio::sync::mpsc::UnboundedReceiver;
@@ -67,7 +67,7 @@ pub async fn process_one(
         .timestamp_millis_opt(msg.occurred_at_ms)
         .single()
         .unwrap_or_else(Utc::now);
-    let occurred_iso = occurred_dt.to_rfc3339_opts(SecondsFormat::Millis, true);
+    let occurred_iso = crate::util::iso(occurred_dt);
 
     // Enrichment (pure ports).
     let (device_type, browser) = ua::parse(msg.user_agent.as_deref().unwrap_or(""));

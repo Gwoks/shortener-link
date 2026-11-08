@@ -2,10 +2,10 @@
 //! `codeExists`, `createLink`, `freeSuggestions`, and the redirect-path resolver.
 //! Pure rules live in alias/redirect/blocklist/ssrf/utm; this is the orchestration.
 
-use chrono::SecondsFormat;
 use sqlx::SqlitePool;
 
-use crate::error::{ApiError, ErrorCode};
+use crate::db::is_unique_violation;
+use crate::error::{internal, ApiError, ErrorCode};
 use crate::ids::cuid;
 use crate::models::Link;
 use crate::services::alias::{self};
@@ -14,9 +14,21 @@ use crate::services::redirect::LinkView;
 use crate::services::shortcode;
 use crate::services::utm::{assemble_utm_url, UtmParams};
 use crate::state::AppState;
+use crate::util::now_iso;
 
-fn now_iso() -> String {
-    chrono::Utc::now().to_rfc3339_opts(SecondsFormat::Millis, true)
+/// Load a link by id, enforcing that `user_id` owns it: NOT_FOUND when absent,
+/// FORBIDDEN when owned by someone else (or by a guest).
+pub async fn load_owned_link(pool: &SqlitePool, id: &str, user_id: &str) -> Result<Link, ApiError> {
+    let link: Link = sqlx::query_as("SELECT * FROM link WHERE id = ?")
+        .bind(id)
+        .fetch_optional(pool)
+        .await
+        .map_err(internal)?
+        .ok_or_else(|| ApiError::new(ErrorCode::NotFound))?;
+    if link.owner_id.as_deref() != Some(user_id) {
+        return Err(ApiError::new(ErrorCode::Forbidden));
+    }
+    Ok(link)
 }
 
 /// True if a (lowercased) code already exists.
@@ -35,9 +47,8 @@ pub async fn free_suggestions(pool: &SqlitePool, base: &str) -> Vec<String> {
     let mut free = Vec::new();
     for c in candidates {
         let lower = alias::normalize(&c);
-        match code_exists(pool, &lower).await {
-            Ok(false) => free.push(c),
-            _ => {}
+        if let Ok(false) = code_exists(pool, &lower).await {
+            free.push(c);
         }
         if free.len() >= 3 {
             break;
@@ -87,7 +98,7 @@ pub async fn create_link(state: &AppState, args: CreateLinkArgs) -> Result<Link,
                 }
                 Err(_) => {
                     let len = a.trim().chars().count();
-                    let msg = if len < alias::ALIAS_MIN || len > alias::ALIAS_MAX {
+                    let msg = if !(alias::ALIAS_MIN..=alias::ALIAS_MAX).contains(&len) {
                         format!(
                             "Custom links must be {}\u{2013}{} characters.",
                             alias::ALIAS_MIN,
@@ -122,7 +133,7 @@ pub async fn create_link(state: &AppState, args: CreateLinkArgs) -> Result<Link,
     let mut expires_at: Option<String> = args.expires_at.clone();
     if args.is_guest && expires_at.is_none() {
         let exp = chrono::Utc::now() + chrono::Duration::hours(args.guest_ttl_hours);
-        expires_at = Some(exp.to_rfc3339_opts(SecondsFormat::Millis, true));
+        expires_at = Some(crate::util::iso(exp));
     }
 
     // Insert, retrying once on a generated-code collision (alias races → ALIAS_TAKEN).
@@ -275,20 +286,4 @@ pub fn to_link_view(link: &Link, redirect_status: u16) -> LinkView {
         has_password: link.password_hash.is_some(),
         redirect_status,
     }
-}
-
-fn internal<E: std::fmt::Display>(e: E) -> ApiError {
-    tracing::error!("links service error: {e}");
-    ApiError::new(ErrorCode::Internal)
-}
-
-fn is_unique_violation(e: &sqlx::Error) -> bool {
-    if let sqlx::Error::Database(db) = e {
-        // SQLite UNIQUE constraint failed → code 2067 (SQLITE_CONSTRAINT_UNIQUE)
-        // or 1555 (PRIMARY KEY), or message contains "UNIQUE constraint failed".
-        return db.code().as_deref() == Some("2067")
-            || db.code().as_deref() == Some("1555")
-            || db.message().contains("UNIQUE constraint failed");
-    }
-    false
 }

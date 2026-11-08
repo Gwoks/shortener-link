@@ -8,7 +8,8 @@ use std::collections::BTreeMap;
 use serde_json::{json, Value};
 use sqlx::SqlitePool;
 
-use crate::error::{ApiError, ErrorCode};
+use crate::db::placeholders;
+use crate::error::{internal, ApiError};
 
 /// Analytics range selector.
 #[derive(Debug, Clone, Copy)]
@@ -121,13 +122,10 @@ async fn fetch_rollups(
     if link_ids.is_empty() {
         return Ok(Vec::new());
     }
-    let placeholders = std::iter::repeat("?")
-        .take(link_ids.len())
-        .collect::<Vec<_>>()
-        .join(",");
+    let id_list = placeholders(link_ids.len());
     let mut sql = format!(
         "SELECT link_id, day, clicks, uniques, by_referrer, by_country, by_device, by_browser
-         FROM click_rollup WHERE link_id IN ({placeholders})"
+         FROM click_rollup WHERE link_id IN ({id_list})"
     );
     if start.is_some() {
         sql.push_str(" AND day >= ?");
@@ -297,9 +295,4 @@ pub async fn summary_analytics(
 /// Reduce a stored day value to YYYY-MM-DD (rollup `day` is stored as a date).
 fn day_only(day: &str) -> String {
     day.chars().take(10).collect()
-}
-
-fn internal<E: std::fmt::Display>(e: E) -> ApiError {
-    tracing::error!("analytics error: {e}");
-    ApiError::new(ErrorCode::Internal)
 }

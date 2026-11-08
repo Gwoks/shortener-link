@@ -8,6 +8,7 @@
 use axum::extract::FromRequestParts;
 use axum::http::header::COOKIE;
 use axum::http::request::Parts;
+use axum::http::HeaderMap;
 
 use crate::auth::jwt;
 use crate::error::{ApiError, ErrorCode};
@@ -58,11 +59,12 @@ pub fn parse_cookies(header: Option<&str>) -> Vec<(String, String)> {
 
 /// Read a single cookie value from the request parts.
 pub fn cookie_value(parts: &Parts, name: &str) -> Option<String> {
-    let header = parts.headers.get(COOKIE).and_then(|v| v.to_str().ok());
-    parse_cookies(header)
-        .into_iter()
-        .find(|(n, _)| n == name)
-        .map(|(_, v)| v)
+    cookie_from_headers(&parts.headers, name)
+}
+
+/// Read a single cookie value from a request's header map.
+pub fn cookie_from_headers(headers: &HeaderMap, name: &str) -> Option<String> {
+    cookie_from_header(headers.get(COOKIE).and_then(|v| v.to_str().ok()), name)
 }
 
 /// Read a single cookie value directly from a Cookie header string.
