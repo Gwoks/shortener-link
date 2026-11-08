@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * Guest-claim prompt (DESIGN §5.10, USER-JOURNEY Journey F / §4.10, FR-34, AC-42).
  * After sign-up / first sign-in, if this browser still holds live guest links it

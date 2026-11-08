@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * Create-success result (DESIGN §5.5 success state, USER-JOURNEY §4.3 "Success",
  * FR-12/14/42, AC-47). After a link is created we don't just navigate away — we
@@ -15,6 +13,7 @@ import { qrUrlForId } from '../lib/api'
 import { displayDestination } from '../lib/format'
 import type { LinkResource } from '../lib/types'
 import { Button } from '../ui/button'
+import { Card } from '../ui/card'
 import { LinkStatusBadges } from '../ui/status-badge'
 import { CopyButton } from './copy-button'
 import { QrModal } from './qr-modal'
@@ -29,10 +28,10 @@ export function LinkResultCard({
   const [qrOpen, setQrOpen] = useState(false)
 
   return (
-    <div className="rounded-md border border-border bg-surface p-5 sm:p-6">
+    <Card>
       <div className="flex items-center gap-2 text-success-fg">
         <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
-        <h2 className="text-h4 text-text-primary">Your short link is ready</h2>
+        <h2 className="text-title text-text-primary">Your short link is ready</h2>
       </div>
 
       <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start">
@@ -108,6 +107,6 @@ export function LinkResultCard({
         code={link.code}
         linkId={link.id}
       />
-    </div>
+    </Card>
   )
 }

@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * Row action menu (DESIGN §5.4, USER-JOURNEY §4.5). Kebab → Edit · QR · Analytics
  * · Copy link · Delete (danger). Built on the DropdownMenu primitive for roving

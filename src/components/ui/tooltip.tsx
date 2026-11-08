@@ -1,5 +1,3 @@
-'use client'
-
 /** Tooltip (DESIGN §4.12). Radix — shows on hover AND focus; never the sole carrier of essential info. */
 import * as TooltipPrimitive from '@radix-ui/react-tooltip'
 import { cn } from '../lib/cn'
@@ -28,9 +26,8 @@ export function Tooltip({
         <TooltipPrimitive.Content
           side={side}
           sideOffset={6}
-          style={{ zIndex: 1400 }}
           className={cn(
-            'z-tooltip max-w-xs break-words rounded-sm bg-surface-raised px-2.5 py-1.5 text-caption text-text-primary shadow-md',
+            'z-tooltip max-w-xs break-words rounded-sm bg-surface-raised px-2.5 py-1.5 text-caption text-text-primary shadow-popover',
             'border border-border data-[state=delayed-open]:animate-fade-in',
           )}
         >

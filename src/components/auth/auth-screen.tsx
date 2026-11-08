@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * Auth screen — sign in / sign up (DESIGN §5.3, USER-JOURNEY Journey F / §4.9,
  * FR-27, AC-35). A centered card on --bg-canvas with a tab toggle between sign-in
@@ -27,6 +25,9 @@ import { useAuth } from '@/auth/auth-context'
 import { getProviders, signInCredentials, signInOAuth } from '@/auth/auth-client'
 import { api, ApiError } from '../lib/api'
 import { Button } from '../ui/button'
+import { Card } from '../ui/card'
+import { cn } from '../lib/cn'
+import { InlineAlert } from '../ui/alert'
 import { Input, Label } from '../ui/input'
 import { GitHubIcon, GoogleIcon } from './provider-icons'
 
@@ -196,8 +197,12 @@ export function AuthScreen() {
 
   return (
     <div className="w-full max-w-md">
-      <div className="rounded-lg border border-border bg-surface p-6 sm:p-8">
-        <h1 ref={headingRef} tabIndex={-1} className="text-h3 text-text-primary outline-none">
+      <Card className="sm:p-8">
+        <h1
+          ref={headingRef}
+          tabIndex={-1}
+          className="text-heading-sm text-text-primary outline-none"
+        >
           {mode === 'signin' ? 'Sign in to Tess' : 'Create your account'}
         </h1>
         <p className="mt-1 text-body-sm text-text-secondary">
@@ -210,7 +215,7 @@ export function AuthScreen() {
         <div
           role="tablist"
           aria-label="Sign in or sign up"
-          className="mt-5 grid grid-cols-2 gap-1 rounded-md border border-border bg-surface-subtle p-1"
+          className="mt-6 grid grid-cols-2 gap-1 rounded-sm bg-canvas p-1"
         >
           {(['signin', 'signup'] as const).map((m) => {
             const selected = mode === m
@@ -221,11 +226,12 @@ export function AuthScreen() {
                 role="tab"
                 aria-selected={selected}
                 onClick={() => switchMode(m)}
-                className={`rounded-sm px-3 py-1.5 text-body-sm font-medium transition-colors duration-fast ${
+                className={cn(
+                  'rounded-xs px-3 py-1.5 text-body-sm font-medium transition-colors duration-base',
                   selected
-                    ? 'bg-surface text-text-primary shadow-xs'
-                    : 'text-text-secondary hover:text-text-primary'
-                }`}
+                    ? 'bg-surface text-text-primary'
+                    : 'text-text-nav hover:text-text-primary',
+                )}
               >
                 {m === 'signin' ? 'Sign in' : 'Sign up'}
               </button>
@@ -239,8 +245,8 @@ export function AuthScreen() {
             {oauth.google && (
               <Button
                 type="button"
-                variant="secondary"
-                className="w-full justify-center"
+                variant="outline"
+                className="w-full justify-center rounded-sm"
                 loading={oauthBusy === 'google'}
                 disabled={!!oauthBusy || submitting}
                 onClick={() => onOAuth('google')}
@@ -252,8 +258,8 @@ export function AuthScreen() {
             {oauth.github && (
               <Button
                 type="button"
-                variant="secondary"
-                className="w-full justify-center"
+                variant="outline"
+                className="w-full justify-center rounded-sm"
                 loading={oauthBusy === 'github'}
                 disabled={!!oauthBusy || submitting}
                 onClick={() => onOAuth('github')}
@@ -362,15 +368,7 @@ export function AuthScreen() {
           </div>
 
           {/* Inline error (assertive). */}
-          {error && (
-            <p
-              id={errId}
-              role="alert"
-              className="rounded-sm border border-danger-fg/40 bg-danger-bg px-3 py-2 text-body-sm text-danger-fg"
-            >
-              {error}
-            </p>
-          )}
+          {error && <InlineAlert id={errId}>{error}</InlineAlert>}
 
           <Button type="submit" className="w-full" loading={submitting} disabled={!!oauthBusy}>
             {mode === 'signin' ? 'Sign in' : 'Create account'}
@@ -403,7 +401,7 @@ export function AuthScreen() {
             </>
           )}
         </p>
-      </div>
+      </Card>
 
       <p className="mt-4 text-center text-caption text-text-tertiary">
         <Link

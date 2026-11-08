@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * Numbered pager (DESIGN §4.12, FR-29, AC-37). Shows a compact window of page
  * numbers with the current page indicated (aria-current) and prev/next disabled

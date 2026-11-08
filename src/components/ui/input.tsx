@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * Text input + textarea + field wrapper (DESIGN §4.2). Inputs support leading/
  * trailing adornments, error state (aria-invalid + aria-describedby), and mono

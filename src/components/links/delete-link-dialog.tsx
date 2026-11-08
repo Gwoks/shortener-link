@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * Delete-link confirmation (DESIGN §4.8, USER-JOURNEY §4.5). Danger dialog that
  * names the link, requires an explicit confirm, and warns that analytics are
@@ -7,8 +5,8 @@
  * Calls `api.deleteLink`; surfaces success/failure via toast and a recoverable
  * error envelope message (FR-37).
  */
-import { useState } from 'react'
-import { api, ApiError } from '../lib/api'
+import { useDeleteLink } from '@/data/links'
+import { errorMessage } from '../lib/api'
 import type { LinkResource } from '../lib/types'
 import { Button } from '../ui/button'
 import {
@@ -36,21 +34,18 @@ export function DeleteLinkDialog({
   onDeleted: (id: string) => void
 }) {
   const { success, error } = useToast()
-  const [busy, setBusy] = useState(false)
+  const deleteLink = useDeleteLink()
+  const busy = deleteLink.isPending
 
   async function handleDelete() {
     if (!link) return
-    setBusy(true)
     try {
-      await api.deleteLink(link.id)
+      await deleteLink.mutateAsync(link.id)
       onDeleted(link.id)
       success('Link deleted', `${link.shortUrl} and its analytics were removed.`)
       onOpenChange(false)
     } catch (e) {
-      const message = e instanceof ApiError ? e.message : 'Something went wrong. Please try again.'
-      error('Couldn’t delete link', message)
-    } finally {
-      setBusy(false)
+      error('Couldn’t delete link', errorMessage(e, 'Something went wrong. Please try again.'))
     }
   }
 
@@ -82,7 +77,7 @@ export function DeleteLinkDialog({
         </DialogBody>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="secondary" disabled={busy}>
+            <Button variant="ghost" disabled={busy}>
               Cancel
             </Button>
           </DialogClose>

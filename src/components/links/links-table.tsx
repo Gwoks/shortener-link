@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * Desktop links table (DESIGN §4.5/§5.4, FR-28). Header with sortable
  * Clicks/Created columns (the two orderings the API supports, §6.2). Columns:
@@ -8,6 +6,7 @@
  * Created (relative + absolute on hover), Actions (kebab). Each row is a
  * keyboard-focusable link to per-link analytics (Enter opens it).
  */
+import { Card } from '../ui/card'
 import { ArrowDown, ArrowUp, ArrowUpDown, ExternalLink } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { cn } from '../lib/cn'
@@ -49,7 +48,7 @@ function SortHeader({
         type="button"
         onClick={onSort}
         className={cn(
-          'inline-flex items-center gap-1.5 rounded-sm text-overline uppercase transition-colors',
+          'inline-flex items-center gap-1.5 rounded-sm text-eyebrow uppercase transition-colors',
           active ? 'text-text-primary' : 'text-text-tertiary hover:text-text-secondary',
         )}
       >
@@ -76,7 +75,7 @@ export function LinksTable({
   const navigate = useNavigate()
 
   return (
-    <div className="overflow-hidden rounded-md border border-border bg-surface">
+    <Card padding="none" className="overflow-hidden">
       <table className="w-full border-separate border-spacing-0 text-left">
         <thead>
           <tr>
@@ -84,7 +83,7 @@ export function LinksTable({
               scope="col"
               className={cn(
                 TH_BG,
-                'border-b border-border px-3 py-2.5 text-overline uppercase text-text-tertiary',
+                'border-b border-border px-3 py-2.5 text-eyebrow uppercase text-text-tertiary',
               )}
             >
               Link
@@ -93,7 +92,7 @@ export function LinksTable({
               scope="col"
               className={cn(
                 TH_BG,
-                'border-b border-border px-3 py-2.5 text-overline uppercase text-text-tertiary',
+                'border-b border-border px-3 py-2.5 text-eyebrow uppercase text-text-tertiary',
               )}
             >
               Destination
@@ -102,7 +101,7 @@ export function LinksTable({
               scope="col"
               className={cn(
                 TH_BG,
-                'border-b border-border px-3 py-2.5 text-overline uppercase text-text-tertiary',
+                'border-b border-border px-3 py-2.5 text-eyebrow uppercase text-text-tertiary',
               )}
             >
               Status
@@ -227,6 +226,6 @@ export function LinksTable({
           })}
         </tbody>
       </table>
-    </div>
+    </Card>
   )
 }

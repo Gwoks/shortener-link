@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * Shared create / edit link form (DESIGN §5.5, USER-JOURNEY §4.3, FR-2/3/15/16/
  * 22/23/44). One scrollable form, grouped into: destination URL, custom alias
@@ -20,11 +18,13 @@
  */
 import { Lock } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useInvalidateLinks } from '@/data/links'
 import { api, ApiError } from '../lib/api'
 import { expiryHint, isoToLocalInput, localInputToIso, nowLocalInput } from '../lib/format'
 import type { CreateLinkPayload, LinkResource, PatchLinkPayload, UtmFields } from '../lib/types'
 import { isValidHttpUrl } from '../lib/url-check'
 import { Button } from '../ui/button'
+import { InlineAlert } from '../ui/alert'
 import { Field, Input, Label } from '../ui/input'
 import { Switch } from '../ui/switch'
 import { useToast } from '../ui/toast'
@@ -82,6 +82,7 @@ export function LinkForm({
   onCancel?: () => void
 }) {
   const { success, error: toastError } = useToast()
+  const invalidateLinks = useInvalidateLinks()
   const origin = useShortOrigin(link)
 
   // ── Field state ──
@@ -209,6 +210,7 @@ export function LinkForm({
           if (cleaned) payload.utm = cleaned
 
           const res = await api.createLink(payload)
+          void invalidateLinks()
           success('Link created!', res.link.shortUrl)
           onCreated?.(res.link)
         } else if (link) {
@@ -247,6 +249,7 @@ export function LinkForm({
           }
 
           const res = await api.patchLink(link.id, payload)
+          void invalidateLinks()
           success('Changes saved', res.link.shortUrl)
           onUpdated?.(res.link)
         }
@@ -285,6 +288,7 @@ export function LinkForm({
       utm,
       active,
       link,
+      invalidateLinks,
     ],
   )
 
@@ -481,19 +485,12 @@ export function LinkForm({
       )}
 
       {/* Form-level error */}
-      {errors.form && (
-        <p
-          role="alert"
-          className="rounded-sm border border-danger-fg/40 bg-danger-bg/40 px-3 py-2 text-body-sm text-danger-fg"
-        >
-          {errors.form}
-        </p>
-      )}
+      {errors.form && <InlineAlert>{errors.form}</InlineAlert>}
 
       {/* Footer actions */}
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         {onCancel && (
-          <Button type="button" variant="secondary" onClick={onCancel} disabled={submitting}>
+          <Button type="button" variant="ghost" onClick={onCancel} disabled={submitting}>
             Cancel
           </Button>
         )}

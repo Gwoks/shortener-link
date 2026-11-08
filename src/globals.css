@@ -22,8 +22,12 @@
 
   --marigold: #ffb110;
   --coral: #f64932;
+  --saffron: #e89d01;
+  --vermillion: #e32d14;
   --mocha: #b18164;
+  --signal-blue: #097fe8;
   --sky-wash: #62aef0;
+  --peach: #f6d5b8; /* hero highlight pill */
   --midnight: #02093a;
 
   /* ── Semantic tokens ── */
@@ -38,10 +42,13 @@
   --text-primary: var(--ink);
   --text-secondary: var(--graphite);
   --text-tertiary: var(--stone);
+  --text-nav: rgba(0, 0, 0, 0.54); /* muted nav link (DESIGN §Muted Nav Link) */
   --text-on-accent: var(--white);
   --accent: var(--notion-blue);
   --accent-hover: var(--notion-blue-hover);
   --accent-subtle-bg: var(--sky-tint);
+  --accent-subtle-hover: #d3e9fd;
+  --border-ink: rgba(0, 0, 0, 0.9); /* Outlined Text Button border */
   --focus-ring: var(--notion-blue);
   --success-fg: #15803d;
   --success-bg: #e9f9f0;
@@ -73,12 +80,11 @@
   --font-mono:
     ui-monospace, 'SF Mono', 'JetBrains Mono', 'Cascadia Code', Menlo, Consolas, monospace;
 
-  /* Shadows — reserved for floating chrome (nav, dropdowns, modals, toasts);
-     content cards use a hairline border only, never a shadow (DESIGN §Do's). */
-  --shadow-xs: 0px 0.7px 1.462px rgba(0, 0, 0, 0.015), 0px 1px 3px rgba(0, 0, 0, 0.02);
-  --shadow-sm: 0px 0.7px 1.462px rgba(0, 0, 0, 0.015), 0px 3px 9px rgba(0, 0, 0, 0.03);
-  --shadow-md: 0px 4px 12px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0px 8px 24px rgba(0, 0, 0, 0.14);
+  /* Elevation (DESIGN §Elevation) — floating chrome only; content cards use a
+     hairline border, never a shadow. */
+  --shadow-nav: 0px 0.7px 1.462px rgba(0, 0, 0, 0.015), 0px 3px 9px rgba(0, 0, 0, 0.03);
+  --shadow-mockup: 0px 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-popover: 0px 4px 12px rgba(0, 0, 0, 0.1);
 
   /* Motion (DESIGN §Do's — "200ms ease transitions") */
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
@@ -100,6 +106,7 @@
     font-family: var(--font-sans);
     font-size: 16px;
     line-height: 1.5;
+    font-feature-settings: 'lnum';
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
@@ -123,20 +130,18 @@
 }
 
 @layer utilities {
-  /* Skeleton shimmer — sweep on a muted block. Reduced-motion → static. */
+  /* Skeleton — a flat block that gently pulses (DESIGN: no gradients).
+     Reduced-motion → static. */
   .skeleton {
-    position: relative;
-    overflow: hidden;
-    background: var(--bg-subtle);
-    border-radius: 6px;
+    background: var(--bg-active);
+    border-radius: 4px;
+    animation: skeleton-pulse 1.6s ease-in-out infinite;
   }
-  .skeleton::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    transform: translateX(-100%);
-    background: linear-gradient(90deg, transparent, var(--bg-hover), transparent);
-    animation: shimmer 1.4s infinite;
+}
+
+@keyframes skeleton-pulse {
+  50% {
+    opacity: 0.55;
   }
 }
 
@@ -151,10 +156,7 @@
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
   }
-  .skeleton::after {
-    display: none;
-  }
   .skeleton {
-    background: var(--bg-hover);
+    animation: none;
   }
 }

@@ -11,17 +11,28 @@ export interface NavItem {
   icon: typeof LinkIcon
   /** When true, only the exact path is "active" (used for the index route). */
   exact?: boolean
+  /** Extra path prefixes that also mark this item active. */
+  alsoMatches?: string[]
 }
 
 export const NAV_ITEMS: NavItem[] = [
-  { href: '/dashboard', label: 'Links', icon: LinkIcon, exact: true },
+  {
+    href: '/dashboard',
+    label: 'Links',
+    icon: LinkIcon,
+    exact: true,
+    alsoMatches: ['/dashboard/links', '/dashboard/new'],
+  },
   { href: '/dashboard/analytics', label: 'Analytics', icon: BarChart3 },
   { href: '/dashboard/bulk', label: 'Bulk', icon: Layers },
   { href: '/settings', label: 'Settings', icon: Settings },
 ]
 
 /** Whether a nav item is active for the current pathname. */
+const isUnder = (pathname: string, prefix: string): boolean =>
+  pathname === prefix || pathname.startsWith(prefix + '/')
+
 export function isNavActive(item: NavItem, pathname: string): boolean {
-  if (item.exact) return pathname === item.href
-  return pathname === item.href || pathname.startsWith(item.href + '/')
+  if (item.alsoMatches?.some((prefix) => isUnder(pathname, prefix))) return true
+  return item.exact ? pathname === item.href : isUnder(pathname, item.href)
 }

@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * Dropdown menu (DESIGN §4.7/4.12, NFR-14, AC-48). Radix DropdownMenu provides
  * roving tabindex, arrow-key navigation, type-ahead, and Escape — the row action
@@ -21,9 +19,8 @@ export const DropdownMenuContent = forwardRef<
       <Menu.Content
         ref={ref}
         sideOffset={sideOffset}
-        style={{ zIndex: 1000 }}
         className={cn(
-          'z-dropdown min-w-[11rem] overflow-hidden rounded-md border border-border bg-surface-raised p-1 shadow-md',
+          'z-dropdown min-w-[11rem] overflow-hidden rounded-md border border-border bg-surface-raised p-1 shadow-popover',
           'data-[state=open]:animate-content-in',
           className,
         )}
@@ -59,7 +56,7 @@ export function DropdownMenuSeparator() {
 
 export function DropdownMenuLabel({ children }: { children: React.ReactNode }) {
   return (
-    <Menu.Label className="px-2.5 py-1.5 text-overline uppercase text-text-tertiary">
+    <Menu.Label className="px-2.5 py-1.5 text-eyebrow uppercase text-text-tertiary">
       {children}
     </Menu.Label>
   )
