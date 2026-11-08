@@ -128,7 +128,11 @@ export function ClicksOverTimeChart({
                   theme={theme}
                   title={dayLabel(String(label))}
                   rows={[
-                    { label: 'Clicks', value: Number(payload[0]?.value ?? 0), color: theme.series[0] },
+                    {
+                      label: 'Clicks',
+                      value: Number(payload[0]?.value ?? 0),
+                      color: theme.series[0],
+                    },
                     {
                       label: 'Unique',
                       value: Number(payload[1]?.value ?? 0),
@@ -238,13 +242,7 @@ export function BreakdownBarChart({
 }
 
 /** Donut chart for device/browser split (AC-10). Legend lives in the table. */
-export function DonutChart({
-  data,
-  height = 220,
-}: {
-  data: BreakdownDatum[]
-  height?: number
-}) {
+export function DonutChart({ data, height = 220 }: { data: BreakdownDatum[]; height?: number }) {
   const theme = useChartTheme()
   const mounted = useMounted()
   if (!mounted) return <ChartBox height={height} />
@@ -278,7 +276,10 @@ export function DonutChart({
                     {
                       label: String(payload[0]?.name ?? ''),
                       value: Number(payload[0]?.value ?? 0),
-                      color: theme.series[(Number(payload[0]?.payload?.colorIndex) || 0) % theme.series.length],
+                      color:
+                        theme.series[
+                          (Number(payload[0]?.payload?.colorIndex) || 0) % theme.series.length
+                        ],
                     },
                   ]}
                 />

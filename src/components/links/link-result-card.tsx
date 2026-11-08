@@ -65,14 +65,13 @@ export function LinkResultCard({
                 title={link.shortUrl}
               >
                 <span className="truncate">{link.shortUrl}</span>
-                <ExternalLink className="h-3.5 w-3.5 shrink-0 text-text-tertiary" aria-hidden="true" />
+                <ExternalLink
+                  className="h-3.5 w-3.5 shrink-0 text-text-tertiary"
+                  aria-hidden="true"
+                />
                 <span className="sr-only">(opens in a new tab)</span>
               </a>
-              <CopyButton
-                value={link.shortUrl}
-                label="Copy"
-                toastTitle="Short link copied!"
-              />
+              <CopyButton value={link.shortUrl} label="Copy" toastTitle="Short link copied!" />
             </div>
           </div>
 
@@ -80,7 +79,10 @@ export function LinkResultCard({
             <LinkStatusBadges link={link} />
           </div>
 
-          <p className="truncate font-mono text-caption text-text-tertiary" title={link.destinationUrl}>
+          <p
+            className="truncate font-mono text-caption text-text-tertiary"
+            title={link.destinationUrl}
+          >
             {displayDestination(link.destinationUrl)}
           </p>
         </div>

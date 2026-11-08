@@ -16,7 +16,12 @@ import type { UtmFields } from '../lib/types'
 import { cn } from '../lib/cn'
 import { Input, Label } from '../ui/input'
 
-const UTM_FIELDS: Array<{ key: keyof UtmFields; label: string; param: string; placeholder: string }> = [
+const UTM_FIELDS: Array<{
+  key: keyof UtmFields
+  label: string
+  param: string
+  placeholder: string
+}> = [
   { key: 'source', label: 'Source', param: 'utm_source', placeholder: 'newsletter' },
   { key: 'medium', label: 'Medium', param: 'utm_medium', placeholder: 'email' },
   { key: 'campaign', label: 'Campaign', param: 'utm_campaign', placeholder: 'spring_sale' },
@@ -137,7 +142,10 @@ export function UtmBuilder({
                     autoComplete="off"
                     aria-describedby={`${id}-param`}
                   />
-                  <span id={`${id}-param`} className="block font-mono text-caption text-text-tertiary">
+                  <span
+                    id={`${id}-param`}
+                    className="block font-mono text-caption text-text-tertiary"
+                  >
                     {f.param}
                   </span>
                 </div>
@@ -147,7 +155,9 @@ export function UtmBuilder({
 
           {showPreview && (
             <div className="space-y-1.5">
-              <span className="text-caption font-medium text-text-secondary">Destination preview</span>
+              <span className="text-caption font-medium text-text-secondary">
+                Destination preview
+              </span>
               <output
                 aria-live="polite"
                 className="block max-h-32 overflow-auto break-all rounded-sm border border-border bg-surface px-3 py-2 font-mono text-caption text-text-primary"

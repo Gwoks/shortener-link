@@ -61,7 +61,11 @@ export function formatNumber(n: number): string {
 }
 
 /** Human-readable "expires in / after" helper for the create form (FR-15). */
-export function expiryHint(expiresAt: string | null, maxClicks: number | null, now = Date.now()): string | null {
+export function expiryHint(
+  expiresAt: string | null,
+  maxClicks: number | null,
+  now = Date.now(),
+): string | null {
   const parts: string[] = []
   if (expiresAt) {
     const exp = new Date(expiresAt).getTime()

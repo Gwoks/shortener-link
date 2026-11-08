@@ -32,7 +32,10 @@ function LandingRoute() {
   return (
     <div className="flex min-h-screen flex-col bg-canvas">
       <PublicTopBar authenticated={!!user} />
-      <main id="main" className="flex flex-1 flex-col items-center px-4 pb-16 pt-10 sm:px-6 sm:pt-16">
+      <main
+        id="main"
+        className="flex flex-1 flex-col items-center px-4 pb-16 pt-10 sm:px-6 sm:pt-16"
+      >
         <div className="w-full max-w-guest-hero">
           <GuestHero />
         </div>

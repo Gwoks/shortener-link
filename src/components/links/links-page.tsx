@@ -28,12 +28,7 @@ import {
   type SortKey,
 } from './links-query'
 import { LinksPagination } from './links-pagination'
-import {
-  LinksEmptyState,
-  LinksError,
-  LinksFilteredEmpty,
-  LinksLoading,
-} from './links-states'
+import { LinksEmptyState, LinksError, LinksFilteredEmpty, LinksLoading } from './links-states'
 import { LinksTable } from './links-table'
 import { LinksToolbar } from './links-toolbar'
 
@@ -106,18 +101,15 @@ export function LinksPage() {
     setQuery((prev) => ({ ...prev, ...patch }))
   }, [])
 
-  const onSortChange = useCallback(
-    (sort: SortKey) => {
-      setQuery((prev) => ({
-        ...prev,
-        // Re-clicking the active column flips the order; a new column defaults desc.
-        order: prev.sort === sort ? (prev.order === 'asc' ? 'desc' : 'asc') : 'desc',
-        sort,
-        page: 1,
-      }))
-    },
-    [],
-  )
+  const onSortChange = useCallback((sort: SortKey) => {
+    setQuery((prev) => ({
+      ...prev,
+      // Re-clicking the active column flips the order; a new column defaults desc.
+      order: prev.sort === sort ? (prev.order === 'asc' ? 'desc' : 'asc') : 'desc',
+      sort,
+      page: 1,
+    }))
+  }, [])
 
   const clearFilters = useCallback(() => {
     setQuery({ ...DEFAULT_QUERY })
@@ -201,8 +193,7 @@ export function LinksPage() {
 
   // Whether to show the toolbar: hide it only on the true zero-links empty state
   // (no filters) and on first load, so users in a filtered-empty view can adjust.
-  const showToolbar =
-    state.phase === 'ready' && (state.items.length > 0 || filtersActive)
+  const showToolbar = state.phase === 'ready' && (state.items.length > 0 || filtersActive)
 
   return (
     <div>

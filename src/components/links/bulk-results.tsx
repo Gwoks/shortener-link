@@ -32,7 +32,7 @@ export function buildCsv(results: BulkResultRow[]): string {
   const lines = results.map((r) =>
     [
       esc(r.input),
-      esc(r.ok ? r.link?.shortUrl ?? '' : ''),
+      esc(r.ok ? (r.link?.shortUrl ?? '') : ''),
       esc(r.ok ? 'success' : 'failed'),
       esc(r.ok ? '' : reasonLabel(r)),
     ].join(','),
@@ -128,7 +128,10 @@ export function BulkResults({ results }: { results: BulkResultRow[] }) {
       error('Couldn’t copy', 'Select the links and copy them manually.')
       return
     }
-    success('All links copied!', `${urls.length} short ${urls.length === 1 ? 'link' : 'links'} copied.`)
+    success(
+      'All links copied!',
+      `${urls.length} short ${urls.length === 1 ? 'link' : 'links'} copied.`,
+    )
     setCopiedAll(true)
     window.setTimeout(() => setCopiedAll(false), 2000)
   }, [urls, success, error])
@@ -160,7 +163,13 @@ export function BulkResults({ results }: { results: BulkResultRow[] }) {
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2">
-          <Button type="button" variant="secondary" size="sm" onClick={onCopyAll} disabled={urls.length === 0}>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={onCopyAll}
+            disabled={urls.length === 0}
+          >
             <Copy className="h-4 w-4" aria-hidden="true" />
             {copiedAll ? 'Copied!' : 'Copy all'}
           </Button>
@@ -233,7 +242,10 @@ export function BulkResults({ results }: { results: BulkResultRow[] }) {
               <span className="text-overline uppercase text-text-tertiary">Input</span>
               <StatusCell ok={row.ok} />
             </div>
-            <p className="mt-1 truncate font-mono text-body-sm text-text-secondary" title={row.input}>
+            <p
+              className="mt-1 truncate font-mono text-body-sm text-text-secondary"
+              title={row.input}
+            >
               {displayDestination(row.input)}
             </p>
             <div className="mt-3 border-t border-border pt-3">

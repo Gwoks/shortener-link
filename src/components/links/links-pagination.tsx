@@ -69,7 +69,11 @@ export function LinksPagination({
 
           {pageWindow(page, totalPages).map((p, i) =>
             p === -1 ? (
-              <span key={`gap-${i}`} className="px-1 text-body-sm text-text-tertiary" aria-hidden="true">
+              <span
+                key={`gap-${i}`}
+                className="px-1 text-body-sm text-text-tertiary"
+                aria-hidden="true"
+              >
                 …
               </span>
             ) : (

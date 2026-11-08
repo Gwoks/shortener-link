@@ -21,7 +21,15 @@ import { api, ApiError } from '../lib/api'
 import { displayDestination, relativeTime } from '../lib/format'
 import type { LinkResource } from '../lib/types'
 import { Button } from '../ui/button'
-import { Dialog, DialogBody, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog'
+import {
+  Dialog,
+  DialogBody,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '../ui/dialog'
 import { useToast } from '../ui/toast'
 
 const DISMISS_KEY = 'tess-claim-dismissed'
@@ -123,9 +131,9 @@ export function GuestClaimPrompt({
             </span>
           </DialogTitle>
           <DialogDescription>
-            You created {count === 1 ? 'this link' : `these ${count} links`} before signing in. Claim{' '}
-            {count === 1 ? 'it' : 'them'} to keep {count === 1 ? 'it' : 'them'} permanently — the 24-hour
-            expiry is removed.
+            You created {count === 1 ? 'this link' : `these ${count} links`} before signing in.
+            Claim {count === 1 ? 'it' : 'them'} to keep {count === 1 ? 'it' : 'them'} permanently —
+            the 24-hour expiry is removed.
           </DialogDescription>
         </DialogHeader>
 
@@ -145,10 +153,16 @@ export function GuestClaimPrompt({
                     title={link.shortUrl}
                   >
                     <span className="truncate">{displayDestination(link.shortUrl)}</span>
-                    <ExternalLink className="h-3 w-3 shrink-0 text-text-tertiary" aria-hidden="true" />
+                    <ExternalLink
+                      className="h-3 w-3 shrink-0 text-text-tertiary"
+                      aria-hidden="true"
+                    />
                     <span className="sr-only">(opens in a new tab)</span>
                   </a>
-                  <p className="truncate font-mono text-caption text-text-tertiary" title={link.destinationUrl}>
+                  <p
+                    className="truncate font-mono text-caption text-text-tertiary"
+                    title={link.destinationUrl}
+                  >
                     {displayDestination(link.destinationUrl)}
                   </p>
                 </div>

@@ -70,7 +70,10 @@ export function Label({
   optional?: boolean
 }) {
   return (
-    <label htmlFor={htmlFor} className={cn('block text-body-sm font-medium text-text-primary', className)}>
+    <label
+      htmlFor={htmlFor}
+      className={cn('block text-body-sm font-medium text-text-primary', className)}
+    >
       {children}
       {optional && <span className="ml-1 font-normal text-text-tertiary">(optional)</span>}
     </label>

@@ -21,7 +21,10 @@ export function LinksTableSkeleton({ rows = 6 }: { rows?: number }) {
       </div>
       <div>
         {Array.from({ length: rows }).map((_, i) => (
-          <div key={i} className="flex items-center gap-3 border-b border-border px-3 py-4 last:border-b-0">
+          <div
+            key={i}
+            className="flex items-center gap-3 border-b border-border px-3 py-4 last:border-b-0"
+          >
             <Skeleton className="h-4 w-20" />
             <Skeleton className="h-4 flex-1" />
             <Skeleton className="h-5 w-20 rounded-pill" />
@@ -82,8 +85,8 @@ export function LinksEmptyState() {
       </span>
       <h3 className="text-h3 text-text-primary">Create your first short link</h3>
       <p className="mt-1.5 max-w-sm text-body-sm text-text-secondary">
-        Shorten a long URL to get a clean, shareable link with click analytics, a QR code, and optional
-        expiry.
+        Shorten a long URL to get a clean, shareable link with click analytics, a QR code, and
+        optional expiry.
       </p>
       <Button asChild className="mt-5">
         <Link to="/dashboard/new">

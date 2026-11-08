@@ -59,7 +59,12 @@ export function ReferrersCard({ referrers, total }: { referrers: Referrers; tota
               numeric: true,
               render: (r) => formatNumber(r.clicks),
             },
-            { key: 'share', header: 'Share', numeric: true, render: (r) => percent(r.clicks, total) },
+            {
+              key: 'share',
+              header: 'Share',
+              numeric: true,
+              render: (r) => percent(r.clicks, total),
+            },
           ]}
         />
       }
@@ -94,7 +99,11 @@ export function GeoCard({ geo, total }: { geo: Geo; total: number }) {
           rows={geo}
           rowKey={(g, i) => `${g.country}-${g.city ?? ''}-${i}`}
           columns={[
-            { key: 'place', header: 'Country / City', render: (g) => geoRowLabel(g.country, g.city) },
+            {
+              key: 'place',
+              header: 'Country / City',
+              render: (g) => geoRowLabel(g.country, g.city),
+            },
             {
               key: 'clicks',
               header: 'Clicks',
@@ -153,7 +162,12 @@ export function DevicesCard({ devices }: { devices: Devices }) {
               numeric: true,
               render: (d) => formatNumber(d.clicks),
             },
-            { key: 'share', header: 'Share', numeric: true, render: (d) => percent(d.clicks, total) },
+            {
+              key: 'share',
+              header: 'Share',
+              numeric: true,
+              render: (d) => percent(d.clicks, total),
+            },
           ]}
         />
       }
@@ -195,7 +209,12 @@ export function BrowsersCard({ browsers }: { browsers: Browsers }) {
               numeric: true,
               render: (b) => formatNumber(b.clicks),
             },
-            { key: 'share', header: 'Share', numeric: true, render: (b) => percent(b.clicks, total) },
+            {
+              key: 'share',
+              header: 'Share',
+              numeric: true,
+              render: (b) => percent(b.clicks, total),
+            },
           ]}
         />
       }
