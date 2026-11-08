@@ -156,5 +156,8 @@ fn client_ip(headers: &HeaderMap) -> Option<String> {
 }
 
 fn header_str(headers: &HeaderMap, name: header::HeaderName) -> Option<String> {
-    headers.get(name).and_then(|v| v.to_str().ok()).map(|s| s.to_string())
+    headers
+        .get(name)
+        .and_then(|v| v.to_str().ok())
+        .map(|s| s.to_string())
 }

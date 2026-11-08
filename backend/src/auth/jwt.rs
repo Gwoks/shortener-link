@@ -51,9 +51,13 @@ pub fn issue(user: &User, secret: &str) -> String {
 pub fn verify(token: &str, secret: &str) -> Option<Claims> {
     let mut validation = Validation::new(Algorithm::HS256);
     validation.validate_exp = true;
-    decode::<Claims>(token, &DecodingKey::from_secret(secret.as_bytes()), &validation)
-        .ok()
-        .map(|data| data.claims)
+    decode::<Claims>(
+        token,
+        &DecodingKey::from_secret(secret.as_bytes()),
+        &validation,
+    )
+    .ok()
+    .map(|data| data.claims)
 }
 
 #[cfg(test)]

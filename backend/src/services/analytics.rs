@@ -134,7 +134,8 @@ async fn fetch_rollups(
     }
     sql.push_str(" ORDER BY day ASC");
 
-    let mut q = sqlx::query_as::<_, (String, String, i64, i64, String, String, String, String)>(&sql);
+    let mut q =
+        sqlx::query_as::<_, (String, String, i64, i64, String, String, String, String)>(&sql);
     for id in link_ids {
         q = q.bind(id);
     }
@@ -144,18 +145,20 @@ async fn fetch_rollups(
     let rows = q.fetch_all(pool).await.map_err(internal)?;
     Ok(rows
         .into_iter()
-        .map(|(link_id, day, clicks, uniques, by_referrer, by_country, by_device, by_browser)| {
-            RollupRow {
-                link_id,
-                day,
-                clicks,
-                uniques,
-                by_referrer,
-                by_country,
-                by_device,
-                by_browser,
-            }
-        })
+        .map(
+            |(link_id, day, clicks, uniques, by_referrer, by_country, by_device, by_browser)| {
+                RollupRow {
+                    link_id,
+                    day,
+                    clicks,
+                    uniques,
+                    by_referrer,
+                    by_country,
+                    by_device,
+                    by_browser,
+                }
+            },
+        )
         .collect())
 }
 
@@ -271,7 +274,10 @@ pub async fn summary_analytics(
     let top_links: Vec<Value> = top
         .into_iter()
         .map(|(link_id, c)| {
-            let code = code_by_id.get(&link_id).cloned().unwrap_or_else(|| link_id.clone());
+            let code = code_by_id
+                .get(&link_id)
+                .cloned()
+                .unwrap_or_else(|| link_id.clone());
             json!({ "linkId": link_id, "code": code, "clicks": c })
         })
         .collect();

@@ -142,7 +142,10 @@ async fn claim(
     }
 
     let ids: Vec<&String> = claimable.iter().map(|(id, _)| id).collect();
-    let ph = std::iter::repeat("?").take(ids.len()).collect::<Vec<_>>().join(",");
+    let ph = std::iter::repeat("?")
+        .take(ids.len())
+        .collect::<Vec<_>>()
+        .join(",");
     let upd = format!(
         "UPDATE link SET owner_id = ?, is_guest = 0, guest_key = NULL, expires_at = NULL
          WHERE id IN ({ph})"

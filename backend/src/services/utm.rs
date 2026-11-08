@@ -93,9 +93,21 @@ mod tests {
 
     fn utm(source: &str, medium: &str, campaign: &str) -> UtmParams {
         UtmParams {
-            source: if source.is_empty() { None } else { Some(source.into()) },
-            medium: if medium.is_empty() { None } else { Some(medium.into()) },
-            campaign: if campaign.is_empty() { None } else { Some(campaign.into()) },
+            source: if source.is_empty() {
+                None
+            } else {
+                Some(source.into())
+            },
+            medium: if medium.is_empty() {
+                None
+            } else {
+                Some(medium.into())
+            },
+            campaign: if campaign.is_empty() {
+                None
+            } else {
+                Some(campaign.into())
+            },
             term: None,
             content: None,
         }

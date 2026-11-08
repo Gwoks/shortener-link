@@ -28,9 +28,24 @@ struct Account {
 }
 
 const ACCOUNTS: &[Account] = &[
-    Account { email: "admin@example.com", password: "admin-password-123", name: "Admin User", role: "ADMIN" },
-    Account { email: "user@example.com", password: "user-password-123", name: "Regular User", role: "USER" },
-    Account { email: "demo@example.com", password: "demo-password-123", name: "Demo User", role: "USER" },
+    Account {
+        email: "admin@example.com",
+        password: "admin-password-123",
+        name: "Admin User",
+        role: "ADMIN",
+    },
+    Account {
+        email: "user@example.com",
+        password: "user-password-123",
+        name: "Regular User",
+        role: "USER",
+    },
+    Account {
+        email: "demo@example.com",
+        password: "demo-password-123",
+        name: "Demo User",
+        role: "USER",
+    },
 ];
 
 /// Seed sample accounts + links. Safe to re-run (upserts on email / code).
@@ -68,21 +83,110 @@ pub async fn run(pool: &SqlitePool) -> anyhow::Result<()> {
     // (code, alias_display, destination, owner, is_guest, guest_key, status, meta_status,
     //  meta_title, meta_description, password_hash, expires_at, max_clicks)
     let links: Vec<(
-        &str, Option<&str>, &str, Option<String>, bool, Option<&str>, &str, &str,
-        Option<&str>, Option<&str>, Option<String>, Option<String>, Option<i64>,
+        &str,
+        Option<&str>,
+        &str,
+        Option<String>,
+        bool,
+        Option<&str>,
+        &str,
+        &str,
+        Option<&str>,
+        Option<&str>,
+        Option<String>,
+        Option<String>,
+        Option<i64>,
     )> = vec![
-        ("demo01", None, "https://example.com/welcome", Some(demo_id.clone()), false, None, "ACTIVE", "READY",
-         Some("Example Domain"), Some("Illustrative destination for the demo dashboard."), None, None, None),
-        ("demopw", Some("demoPW"), "https://example.com/protected", Some(demo_id.clone()), false, None, "ACTIVE", "READY",
-         Some("Protected Page"), None, Some(link_password_hash.clone()), None, None),
-        ("demoex", None, "https://example.com/expired", Some(demo_id.clone()), false, None, "ACTIVE", "READY",
-         None, None, None, Some(iso(now - Duration::hours(1))), None),
-        ("demomx", None, "https://example.com/limited", Some(demo_id.clone()), false, None, "ACTIVE", "READY",
-         None, None, None, None, Some(1)),
-        ("admin1", None, "https://example.com/admin-resource", Some(admin_id.clone()), false, None, "ACTIVE", "READY",
-         Some("Admin's link"), None, None, None, None),
-        ("guest1", None, "https://example.com/guest", None, true, Some("seed-guest-key"), "ACTIVE", "PENDING",
-         None, None, None, Some(iso(now + Duration::hours(24))), None),
+        (
+            "demo01",
+            None,
+            "https://example.com/welcome",
+            Some(demo_id.clone()),
+            false,
+            None,
+            "ACTIVE",
+            "READY",
+            Some("Example Domain"),
+            Some("Illustrative destination for the demo dashboard."),
+            None,
+            None,
+            None,
+        ),
+        (
+            "demopw",
+            Some("demoPW"),
+            "https://example.com/protected",
+            Some(demo_id.clone()),
+            false,
+            None,
+            "ACTIVE",
+            "READY",
+            Some("Protected Page"),
+            None,
+            Some(link_password_hash.clone()),
+            None,
+            None,
+        ),
+        (
+            "demoex",
+            None,
+            "https://example.com/expired",
+            Some(demo_id.clone()),
+            false,
+            None,
+            "ACTIVE",
+            "READY",
+            None,
+            None,
+            None,
+            Some(iso(now - Duration::hours(1))),
+            None,
+        ),
+        (
+            "demomx",
+            None,
+            "https://example.com/limited",
+            Some(demo_id.clone()),
+            false,
+            None,
+            "ACTIVE",
+            "READY",
+            None,
+            None,
+            None,
+            None,
+            Some(1),
+        ),
+        (
+            "admin1",
+            None,
+            "https://example.com/admin-resource",
+            Some(admin_id.clone()),
+            false,
+            None,
+            "ACTIVE",
+            "READY",
+            Some("Admin's link"),
+            None,
+            None,
+            None,
+            None,
+        ),
+        (
+            "guest1",
+            None,
+            "https://example.com/guest",
+            None,
+            true,
+            Some("seed-guest-key"),
+            "ACTIVE",
+            "PENDING",
+            None,
+            None,
+            None,
+            Some(iso(now + Duration::hours(24))),
+            None,
+        ),
     ];
 
     for l in &links {
@@ -117,14 +221,23 @@ mod tests {
         run(&pool).await.unwrap();
         run(&pool).await.unwrap(); // idempotent
 
-        let users: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM \"user\"").fetch_one(&pool).await.unwrap();
-        let links: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM link").fetch_one(&pool).await.unwrap();
+        let users: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM \"user\"")
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+        let links: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM link")
+            .fetch_one(&pool)
+            .await
+            .unwrap();
         assert_eq!(users, 3);
         assert_eq!(links, 6);
 
         // password-protected demo link carries a hash
-        let pw: Option<String> = sqlx::query_scalar("SELECT password_hash FROM link WHERE code = 'demopw'")
-            .fetch_one(&pool).await.unwrap();
+        let pw: Option<String> =
+            sqlx::query_scalar("SELECT password_hash FROM link WHERE code = 'demopw'")
+                .fetch_one(&pool)
+                .await
+                .unwrap();
         assert!(pw.is_some());
     }
 }

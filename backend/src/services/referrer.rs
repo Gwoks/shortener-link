@@ -133,17 +133,32 @@ mod tests {
         assert_eq!(c, RefCategory::Social);
         assert_eq!(h.as_deref(), Some("facebook.com"));
         assert_eq!(categorize(Some("https://x.com/")).0, RefCategory::Social);
-        assert_eq!(categorize(Some("https://m.facebook.com/")).0, RefCategory::Social);
+        assert_eq!(
+            categorize(Some("https://m.facebook.com/")).0,
+            RefCategory::Social
+        );
         assert_eq!(categorize(Some("https://t.me/chan")).0, RefCategory::Social);
     }
 
     #[test]
     fn search_hosts() {
-        assert_eq!(categorize(Some("https://www.google.com/search")).0, RefCategory::Search);
+        assert_eq!(
+            categorize(Some("https://www.google.com/search")).0,
+            RefCategory::Search
+        );
         // wildcard "google." prefix => google.co.uk etc.
-        assert_eq!(categorize(Some("https://google.co.uk/")).0, RefCategory::Search);
-        assert_eq!(categorize(Some("https://news.google.de/")).0, RefCategory::Search);
-        assert_eq!(categorize(Some("https://duckduckgo.com/")).0, RefCategory::Search);
+        assert_eq!(
+            categorize(Some("https://google.co.uk/")).0,
+            RefCategory::Search
+        );
+        assert_eq!(
+            categorize(Some("https://news.google.de/")).0,
+            RefCategory::Search
+        );
+        assert_eq!(
+            categorize(Some("https://duckduckgo.com/")).0,
+            RefCategory::Search
+        );
     }
 
     #[test]
