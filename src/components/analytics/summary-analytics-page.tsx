@@ -187,10 +187,11 @@ function SummaryBody({ data, range }: { data: Loaded; range: AnalyticsRange }) {
 
 function ClicksOverTimeCard({ series }: { series: SummaryAnalytics['series'] }) {
   const empty = series.length === 0 || series.every((s) => s.clicks === 0)
-  const peak = series.reduce(
-    (best, s) => (s.clicks > best.clicks ? s : best),
-    { day: '', clicks: 0, uniques: 0 },
-  )
+  const peak = series.reduce((best, s) => (s.clicks > best.clicks ? s : best), {
+    day: '',
+    clicks: 0,
+    uniques: 0,
+  })
   return (
     <ChartCard
       title="Clicks over time"
@@ -271,7 +272,12 @@ function TopLinksCard({
               numeric: true,
               render: (l) => formatNumber(l.clicks),
             },
-            { key: 'share', header: 'Share', numeric: true, render: (l) => percent(l.clicks, total) },
+            {
+              key: 'share',
+              header: 'Share',
+              numeric: true,
+              render: (l) => percent(l.clicks, total),
+            },
             {
               key: 'bar',
               header: 'Distribution',

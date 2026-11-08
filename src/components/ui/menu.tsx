@@ -58,5 +58,9 @@ export function DropdownMenuSeparator() {
 }
 
 export function DropdownMenuLabel({ children }: { children: React.ReactNode }) {
-  return <Menu.Label className="px-2.5 py-1.5 text-overline uppercase text-text-tertiary">{children}</Menu.Label>
+  return (
+    <Menu.Label className="px-2.5 py-1.5 text-overline uppercase text-text-tertiary">
+      {children}
+    </Menu.Label>
+  )
 }

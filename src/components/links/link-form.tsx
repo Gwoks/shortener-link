@@ -157,27 +157,30 @@ export function LinkForm({
   }
 
   // Maps a server ApiError onto the right field; returns a user-facing message.
-  const applyServerError = useCallback((e: ApiError) => {
-    const field = e.field
-    if (field === 'alias' || e.code === 'ALIAS_TAKEN' || e.code === 'ALIAS_RESERVED') {
-      setAliasState(
-        e.code === 'ALIAS_RESERVED'
-          ? { status: 'reserved', message: e.message }
-          : { status: 'taken', message: e.message, suggestions: e.suggestions },
-      )
-      setFieldError('alias', e.message)
-    } else if (field === 'url' || e.code === 'INVALID_URL' || e.code === 'URL_BLOCKED') {
-      setFieldError('url', e.message)
-    } else if (field === 'maxClicks') {
-      setFieldError('maxClicks', e.message)
-    } else if (field === 'expiresAt') {
-      setFieldError('expiresAt', e.message)
-    } else if (field === 'password') {
-      setFieldError('password', e.message)
-    } else {
-      setFieldError('form', e.message)
-    }
-  }, [setFieldError])
+  const applyServerError = useCallback(
+    (e: ApiError) => {
+      const field = e.field
+      if (field === 'alias' || e.code === 'ALIAS_TAKEN' || e.code === 'ALIAS_RESERVED') {
+        setAliasState(
+          e.code === 'ALIAS_RESERVED'
+            ? { status: 'reserved', message: e.message }
+            : { status: 'taken', message: e.message, suggestions: e.suggestions },
+        )
+        setFieldError('alias', e.message)
+      } else if (field === 'url' || e.code === 'INVALID_URL' || e.code === 'URL_BLOCKED') {
+        setFieldError('url', e.message)
+      } else if (field === 'maxClicks') {
+        setFieldError('maxClicks', e.message)
+      } else if (field === 'expiresAt') {
+        setFieldError('expiresAt', e.message)
+      } else if (field === 'password') {
+        setFieldError('password', e.message)
+      } else {
+        setFieldError('form', e.message)
+      }
+    },
+    [setFieldError],
+  )
 
   // ── Submit ──
   const onSubmit = useCallback(
@@ -269,7 +272,20 @@ export function LinkForm({
       setSubmitting(false)
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [mode, url, alias, aliasState, expiresAt, maxClicks, pwEnabled, pwEditing, password, utm, active, link],
+    [
+      mode,
+      url,
+      alias,
+      aliasState,
+      expiresAt,
+      maxClicks,
+      pwEnabled,
+      pwEditing,
+      password,
+      utm,
+      active,
+      link,
+    ],
   )
 
   const submitDisabled = submitting || !aliasAllowsSubmit(aliasState)
@@ -326,7 +342,9 @@ export function LinkForm({
 
       {/* Expiration: datetime AND/OR max-click cap */}
       <fieldset className="space-y-4 rounded-md border border-border p-4">
-        <legend className="px-1 text-body-sm font-medium text-text-primary">Expiration (optional)</legend>
+        <legend className="px-1 text-body-sm font-medium text-text-primary">
+          Expiration (optional)
+        </legend>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field
             label="Expires on"
@@ -411,7 +429,12 @@ export function LinkForm({
                 <span className="text-body-sm text-text-secondary">
                   A password is set for this link.
                 </span>
-                <Button type="button" variant="secondary" size="sm" onClick={() => setPwEditing(true)}>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setPwEditing(true)}
+                >
                   Change
                 </Button>
               </div>
@@ -459,7 +482,10 @@ export function LinkForm({
 
       {/* Form-level error */}
       {errors.form && (
-        <p role="alert" className="rounded-sm border border-danger-fg/40 bg-danger-bg/40 px-3 py-2 text-body-sm text-danger-fg">
+        <p
+          role="alert"
+          className="rounded-sm border border-danger-fg/40 bg-danger-bg/40 px-3 py-2 text-body-sm text-danger-fg"
+        >
           {errors.form}
         </p>
       )}

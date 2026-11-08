@@ -47,8 +47,7 @@ export function DeleteLinkDialog({
       success('Link deleted', `${link.shortUrl} and its analytics were removed.`)
       onOpenChange(false)
     } catch (e) {
-      const message =
-        e instanceof ApiError ? e.message : 'Something went wrong. Please try again.'
+      const message = e instanceof ApiError ? e.message : 'Something went wrong. Please try again.'
       error('Couldn’t delete link', message)
     } finally {
       setBusy(false)
@@ -69,8 +68,9 @@ export function DeleteLinkDialog({
           <DialogDescription>
             {link ? (
               <>
-                <span className="font-mono text-text-primary">{link.shortUrl}</span> will stop working
-                immediately and its click analytics will be permanently deleted. This can’t be undone.
+                <span className="font-mono text-text-primary">{link.shortUrl}</span> will stop
+                working immediately and its click analytics will be permanently deleted. This can’t
+                be undone.
               </>
             ) : null}
           </DialogDescription>

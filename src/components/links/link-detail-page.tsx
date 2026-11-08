@@ -154,7 +154,10 @@ export function LinkDetailPage({ id }: { id: string }) {
             </a>
             <LinkStatusBadges link={link} />
           </div>
-          <p className="mt-1.5 truncate font-mono text-caption text-text-tertiary" title={link.destinationUrl}>
+          <p
+            className="mt-1.5 truncate font-mono text-caption text-text-tertiary"
+            title={link.destinationUrl}
+          >
             {displayDestination(link.destinationUrl)}
           </p>
           <p className="mt-1 text-caption text-text-tertiary">

@@ -85,9 +85,7 @@ export function LinkAnalyticsPage({ id }: { id: string }) {
       setDataState({ phase: 'ready', data })
     } catch (e) {
       const message =
-        e instanceof ApiError
-          ? e.message
-          : 'We couldn’t load analytics for this link. Try again.'
+        e instanceof ApiError ? e.message : 'We couldn’t load analytics for this link. Try again.'
       setDataState({ phase: 'error', message })
     }
   }, [id, range])
@@ -225,7 +223,11 @@ export function LinkAnalyticsPage({ id }: { id: string }) {
       {!isGuest && (
         <div className="mb-4 flex items-center justify-between gap-3">
           <p className="text-body-sm text-text-secondary">{rangeLabel(range)}</p>
-          <RangeSelector value={range} onChange={setRange} disabled={dataState.phase === 'loading'} />
+          <RangeSelector
+            value={range}
+            onChange={setRange}
+            disabled={dataState.phase === 'loading'}
+          />
         </div>
       )}
 
@@ -361,10 +363,11 @@ function ZeroDataState({ link }: { link: LinkResource }) {
 
 function ClicksOverTimeCard({ series }: { series: LinkAnalytics['series'] }) {
   const empty = series.length === 0 || series.every((s) => s.clicks === 0)
-  const peak = series.reduce(
-    (best, s) => (s.clicks > best.clicks ? s : best),
-    { day: '', clicks: 0, uniques: 0 },
-  )
+  const peak = series.reduce((best, s) => (s.clicks > best.clicks ? s : best), {
+    day: '',
+    clicks: 0,
+    uniques: 0,
+  })
   return (
     <ChartCard
       title="Clicks over time"
@@ -381,7 +384,12 @@ function ClicksOverTimeCard({ series }: { series: LinkAnalytics['series'] }) {
           rowKey={(r) => r.day}
           columns={[
             { key: 'day', header: 'Day', render: (r) => formatDay(r.day) },
-            { key: 'clicks', header: 'Clicks', numeric: true, render: (r) => formatNumber(r.clicks) },
+            {
+              key: 'clicks',
+              header: 'Clicks',
+              numeric: true,
+              render: (r) => formatNumber(r.clicks),
+            },
             {
               key: 'uniques',
               header: 'Unique',

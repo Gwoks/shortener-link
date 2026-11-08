@@ -34,9 +34,12 @@ function SearchBox({ value, onChange }: { value: string; onChange: (v: string) =
     setLocal(value)
   }, [value])
 
-  useEffect(() => () => {
-    if (debounce.current) clearTimeout(debounce.current)
-  }, [])
+  useEffect(
+    () => () => {
+      if (debounce.current) clearTimeout(debounce.current)
+    },
+    [],
+  )
 
   function emit(next: string) {
     setLocal(next)
@@ -95,7 +98,10 @@ function SortSelect({
   const value = `${sort}:${order}`
   return (
     <div className="flex items-center gap-2">
-      <label htmlFor={id} className="hidden whitespace-nowrap text-body-sm text-text-secondary sm:block">
+      <label
+        htmlFor={id}
+        className="hidden whitespace-nowrap text-body-sm text-text-secondary sm:block"
+      >
         Sort
       </label>
       <div className="relative">
@@ -104,7 +110,10 @@ function SortSelect({
           value={value}
           onChange={(e) => {
             const [s, o] = e.target.value.split(':')
-            onChange({ sort: s === 'clicks' ? 'clicks' : 'created', order: o === 'asc' ? 'asc' : 'desc' })
+            onChange({
+              sort: s === 'clicks' ? 'clicks' : 'created',
+              order: o === 'asc' ? 'asc' : 'desc',
+            })
           }}
           className={cn(
             'h-9 appearance-none rounded-sm border border-border-strong bg-surface pl-3 pr-8 text-body-sm text-text-primary',

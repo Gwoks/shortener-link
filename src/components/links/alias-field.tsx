@@ -49,9 +49,31 @@ const ALIAS_MAX = 50
 const ALIAS_PATTERN = /^[A-Za-z0-9_-]+$/
 const RESERVED = new Set(
   [
-    'api', 'login', 'signin', 'signup', 'logout', 'app', 'dashboard', 'admin', 'settings',
-    'account', 'analytics', 'links', 'bulk', 'qr', 'auth', 'healthz', 'health', 'dead-link',
-    'gate', '_next', 'static', 'assets', 'favicon.ico', 'robots.txt', 'sitemap.xml',
+    'api',
+    'login',
+    'signin',
+    'signup',
+    'logout',
+    'app',
+    'dashboard',
+    'admin',
+    'settings',
+    'account',
+    'analytics',
+    'links',
+    'bulk',
+    'qr',
+    'auth',
+    'healthz',
+    'health',
+    'dead-link',
+    'gate',
+    '_next',
+    'static',
+    'assets',
+    'favicon.ico',
+    'robots.txt',
+    'sitemap.xml',
   ].map((w) => w.toLowerCase()),
 )
 
@@ -59,7 +81,10 @@ function localValidate(raw: string): AliasState | null {
   const alias = raw.trim()
   if (alias.length === 0) return { status: 'empty' }
   if (alias.length < ALIAS_MIN || alias.length > ALIAS_MAX) {
-    return { status: 'invalid', message: `Custom links must be ${ALIAS_MIN}–${ALIAS_MAX} characters.` }
+    return {
+      status: 'invalid',
+      message: `Custom links must be ${ALIAS_MIN}–${ALIAS_MAX} characters.`,
+    }
   }
   if (!ALIAS_PATTERN.test(alias)) {
     return { status: 'invalid', message: 'Use only letters, numbers, hyphens, and underscores.' }
@@ -176,7 +201,8 @@ export function AliasField({
 
   const hint = HINTS[state.status]
   const message = state.message ?? hint?.text ?? ''
-  const isError = state.status === 'taken' || state.status === 'reserved' || state.status === 'invalid'
+  const isError =
+    state.status === 'taken' || state.status === 'reserved' || state.status === 'invalid'
   const showSuggestions = state.status === 'taken' && (state.suggestions?.length ?? 0) > 0
 
   return (
@@ -214,7 +240,9 @@ export function AliasField({
           className="rounded-none border-0 bg-transparent focus:border-0"
         />
         <span className="flex w-9 items-center justify-center" aria-hidden="true">
-          {state.status === 'checking' && <Loader2 className="h-4 w-4 animate-spin text-text-tertiary" />}
+          {state.status === 'checking' && (
+            <Loader2 className="h-4 w-4 animate-spin text-text-tertiary" />
+          )}
           {(state.status === 'available' || state.status === 'unchanged') && (
             <Check className="h-4 w-4 text-success-fg" />
           )}

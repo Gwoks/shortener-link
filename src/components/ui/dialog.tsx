@@ -58,11 +58,25 @@ export const DialogContent = forwardRef<
   )
 })
 
-export function DialogHeader({ className, children }: { className?: string; children: React.ReactNode }) {
-  return <div className={cn('shrink-0 border-b border-border px-6 py-4', className)}>{children}</div>
+export function DialogHeader({
+  className,
+  children,
+}: {
+  className?: string
+  children: React.ReactNode
+}) {
+  return (
+    <div className={cn('shrink-0 border-b border-border px-6 py-4', className)}>{children}</div>
+  )
 }
 
-export function DialogTitle({ className, children }: { className?: string; children: React.ReactNode }) {
+export function DialogTitle({
+  className,
+  children,
+}: {
+  className?: string
+  children: React.ReactNode
+}) {
   return (
     <DialogPrimitive.Title className={cn('text-h3 text-text-primary', className)}>
       {children}
@@ -84,11 +98,23 @@ export function DialogDescription({
   )
 }
 
-export function DialogBody({ className, children }: { className?: string; children: React.ReactNode }) {
+export function DialogBody({
+  className,
+  children,
+}: {
+  className?: string
+  children: React.ReactNode
+}) {
   return <div className={cn('flex-1 overflow-y-auto px-6 py-5', className)}>{children}</div>
 }
 
-export function DialogFooter({ className, children }: { className?: string; children: React.ReactNode }) {
+export function DialogFooter({
+  className,
+  children,
+}: {
+  className?: string
+  children: React.ReactNode
+}) {
   return (
     <div
       className={cn(

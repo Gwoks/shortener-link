@@ -207,7 +207,10 @@ export function GuestHero() {
           </button>
           {advancedOpen && (
             <div id={advancedId} className="mt-3 rounded-md border border-border bg-surface p-4">
-              <label htmlFor="guest-expiry" className="block text-body-sm font-medium text-text-primary">
+              <label
+                htmlFor="guest-expiry"
+                className="block text-body-sm font-medium text-text-primary"
+              >
                 Expire sooner <span className="font-normal text-text-tertiary">(optional)</span>
               </label>
               <Input

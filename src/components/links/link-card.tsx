@@ -74,7 +74,8 @@ export function LinkCard({
       <div className="mt-3 flex items-center justify-between gap-2 border-t border-border pt-3">
         <div className="flex items-center gap-3 text-caption text-text-secondary">
           <span className="tnum font-medium text-text-primary">
-            {formatNumber(link.clickCount)} <span className="font-normal text-text-tertiary">clicks</span>
+            {formatNumber(link.clickCount)}{' '}
+            <span className="font-normal text-text-tertiary">clicks</span>
           </span>
           <span aria-hidden="true">·</span>
           <span title={absoluteTime(link.createdAt)}>{relativeTime(link.createdAt)}</span>
