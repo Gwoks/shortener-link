@@ -7,7 +7,7 @@
  * - signInOAuth       → full-page redirect to the backend OAuth start endpoint.
  * - getProviders      → the static provider set the auth screen needs.
  */
-import { ApiError } from '@/components/lib/api'
+import { ApiError, turnstileHeaders } from '@/components/lib/api'
 
 export type OAuthProvider = 'google' | 'github'
 
@@ -24,13 +24,17 @@ export type ProvidersMap = Record<OAuthProvider, ProviderInfo>
  * can render an inline message. On success the caller should call the auth
  * context `refresh()` to pick up the new session.
  */
-export async function signInCredentials(email: string, password: string): Promise<void> {
+export async function signInCredentials(
+  email: string,
+  password: string,
+  turnstileToken?: string | null,
+): Promise<void> {
   let res: Response
   try {
     res = await fetch('/api/auth/login', {
       method: 'POST',
       credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...turnstileHeaders(turnstileToken) },
       body: JSON.stringify({ email, password }),
     })
   } catch {

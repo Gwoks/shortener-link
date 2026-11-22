@@ -28,6 +28,7 @@ import { Button } from '../ui/button'
 import { Field, Input, Label } from '../ui/input'
 import { Switch } from '../ui/switch'
 import { useToast } from '../ui/toast'
+import { useTurnstile } from '../security/turnstile'
 import { AliasField, aliasAllowsSubmit, type AliasState } from './alias-field'
 import { cleanUtm, UtmBuilder } from './utm-builder'
 
@@ -180,6 +181,10 @@ export function LinkForm({
   }, [setFieldError])
 
   // ── Submit ──
+  // Turnstile guards link creation only (edits are owner-authenticated PATCHes).
+  const turnstile = useTurnstile('shorten')
+  const isCreate = mode === 'create'
+
   const onSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault()
@@ -205,7 +210,7 @@ export function LinkForm({
           const cleaned = cleanUtm(utm)
           if (cleaned) payload.utm = cleaned
 
-          const res = await api.createLink(payload)
+          const res = await api.createLink(payload, turnstile.token)
           success('Link created!', res.link.shortUrl)
           onCreated?.(res.link)
         } else if (link) {
@@ -265,14 +270,18 @@ export function LinkForm({
         }
         setSubmitting(false)
         return
+      } finally {
+        // Tokens are single-use: always fetch a fresh one for the next create.
+        if (mode === 'create') turnstile.reset()
       }
       setSubmitting(false)
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [mode, url, alias, aliasState, expiresAt, maxClicks, pwEnabled, pwEditing, password, utm, active, link],
+    [mode, url, alias, aliasState, expiresAt, maxClicks, pwEnabled, pwEditing, password, utm, active, link, turnstile],
   )
 
-  const submitDisabled = submitting || !aliasAllowsSubmit(aliasState)
+  const submitDisabled =
+    submitting || !aliasAllowsSubmit(aliasState) || (isCreate && !turnstile.isReady)
   const hint = expiryHint(
     expiresAt ? localInputToIso(expiresAt) : null,
     maxClicks.trim() ? Number(maxClicks.trim()) : null,
@@ -463,6 +472,9 @@ export function LinkForm({
           {errors.form}
         </p>
       )}
+
+      {/* Human verification (create only). */}
+      {isCreate && turnstile.widget}
 
       {/* Footer actions */}
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">

@@ -12,7 +12,8 @@
  *    signIn(provider, { redirectTo }).
  *  - Email/password sign-in uses signIn('credentials', { redirect: false }) so we
  *    can show an inline "wrong credentials" error instead of a redirect.
- *  - Sign-up registers via POST /api/auth/register (api.register) then signs in;
+ *  - Sign-up registers via POST /api/auth/register (api.register), which sets
+ *    the session cookie directly (no second sign-in call);
  *    EMAIL_TAKEN and validation errors render inline.
  *  - ?callbackUrl= from the query (middleware sends it) is honored as redirectTo;
  *    defaults to /dashboard.
@@ -28,6 +29,7 @@ import { getProviders, signInCredentials, signInOAuth } from '@/auth/auth-client
 import { api, ApiError } from '../lib/api'
 import { Button } from '../ui/button'
 import { Input, Label } from '../ui/input'
+import { useTurnstile } from '../security/turnstile'
 import { GitHubIcon, GoogleIcon } from './provider-icons'
 
 type Mode = 'signin' | 'signup'
@@ -54,6 +56,20 @@ const STRENGTH_BAR: Record<0 | 1 | 2 | 3, string> = {
   3: 'w-full bg-success-fg',
 }
 
+/** Inline copy for a failed sign-in / sign-up request. */
+function authErrorMessage(mode: Mode, err: unknown): string {
+  if (!(err instanceof ApiError)) {
+    return mode === 'signup'
+      ? 'Could not create your account. Please try again.'
+      : 'Something went wrong. Please try again.'
+  }
+  if (err.code === 'CAPTCHA_FAILED') return err.message
+  if (mode === 'signin') return 'Incorrect email or password. Please try again.'
+  return err.code === 'EMAIL_TAKEN'
+    ? 'An account with that email already exists. Try signing in instead.'
+    : err.message
+}
+
 export function AuthScreen() {
   const navigate = useNavigate()
   const { refresh } = useAuth()
@@ -77,6 +93,7 @@ export function AuthScreen() {
   const [submitting, setSubmitting] = useState(false)
   /** Which provider button is mid-redirect (disables the others). */
   const [oauthBusy, setOauthBusy] = useState<string | null>(null)
+  const turnstile = useTurnstile(mode === 'signin' ? 'login' : 'signup')
 
   const emailId = useId()
   const pwId = useId()
@@ -145,50 +162,39 @@ export function AuthScreen() {
         return
       }
 
+      if (!turnstile.isReady) {
+        setError('Please complete the human verification, then try again.')
+        return
+      }
+
       setSubmitting(true)
       try {
+        // Register sets the session cookie itself, so sign-up needs no follow-up
+        // login (which would also need a second single-use Turnstile token).
         if (mode === 'signup') {
-          // Register, then sign in with the same credentials.
-          try {
-            await api.register({
-              email: trimmedEmail,
-              password,
-              name: name.trim() || undefined,
-            })
-          } catch (err) {
-            if (err instanceof ApiError) {
-              setError(
-                err.code === 'EMAIL_TAKEN'
-                  ? 'An account with that email already exists. Try signing in instead.'
-                  : err.message,
-              )
-            } else {
-              setError('Could not create your account. Please try again.')
-            }
-            setSubmitting(false)
-            return
-          }
-        }
-
-        try {
-          await signInCredentials(trimmedEmail, password)
-        } catch {
-          setError(
-            mode === 'signup'
-              ? 'Your account was created, but automatic sign-in failed. Try signing in.'
-              : 'Incorrect email or password. Please try again.',
+          await api.register(
+            { email: trimmedEmail, password, name: name.trim() || undefined },
+            turnstile.token,
           )
-          setSubmitting(false)
-          return
+        } else {
+          await signInCredentials(trimmedEmail, password, turnstile.token)
         }
+      } catch (err) {
+        turnstile.reset()
+        setError(authErrorMessage(mode, err))
+        setSubmitting(false)
+        return
+      }
 
+      try {
         await finishWithSession()
       } catch {
+        turnstile.reset()
         setError('Something went wrong. Please try again.')
         setSubmitting(false)
       }
     },
-    [mode, email, password, name, finishWithSession],
+    [mode, email, password, name, finishWithSession, turnstile],
   )
 
   const hasOAuth = oauth.google || oauth.github
@@ -361,6 +367,8 @@ export function AuthScreen() {
             )}
           </div>
 
+          {turnstile.widget}
+
           {/* Inline error (assertive). */}
           {error && (
             <p
@@ -372,7 +380,12 @@ export function AuthScreen() {
             </p>
           )}
 
-          <Button type="submit" className="w-full" loading={submitting} disabled={!!oauthBusy}>
+          <Button
+            type="submit"
+            className="w-full"
+            loading={submitting}
+            disabled={!!oauthBusy || !turnstile.isReady}
+          >
             {mode === 'signin' ? 'Sign in' : 'Create account'}
           </Button>
         </form>

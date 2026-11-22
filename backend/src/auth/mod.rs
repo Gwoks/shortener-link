@@ -23,6 +23,7 @@ use serde_json::json;
 use crate::error::{ApiError, ErrorCode};
 use crate::ids::cuid;
 use crate::models::User;
+use crate::services::turnstile;
 use crate::state::AppState;
 
 use extractor::{
@@ -56,8 +57,10 @@ struct RegisterBody {
 
 async fn register(
     State(state): State<AppState>,
+    headers: axum::http::HeaderMap,
     body: Result<Json<RegisterBody>, axum::extract::rejection::JsonRejection>,
 ) -> Result<Response, ApiError> {
+    turnstile::verify(&state.cfg, &headers, turnstile::ACTION_SIGNUP).await?;
     let Json(body) = body.map_err(|_| {
         ApiError::new(ErrorCode::ValidationError).with_message("Request body must be valid JSON.")
     })?;
@@ -135,8 +138,10 @@ struct LoginBody {
 
 async fn login(
     State(state): State<AppState>,
+    headers: axum::http::HeaderMap,
     body: Result<Json<LoginBody>, axum::extract::rejection::JsonRejection>,
 ) -> Result<Response, ApiError> {
+    turnstile::verify(&state.cfg, &headers, turnstile::ACTION_LOGIN).await?;
     let Json(body) = body.map_err(|_| {
         ApiError::new(ErrorCode::ValidationError).with_message("Request body must be valid JSON.")
     })?;

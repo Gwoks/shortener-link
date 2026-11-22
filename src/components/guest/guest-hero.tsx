@@ -23,6 +23,7 @@ import type { CreateLinkPayload, LinkResource } from '../lib/types'
 import { isValidHttpUrl } from '../lib/url-check'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
+import { useTurnstile } from '../security/turnstile'
 import { GuestResultCard } from './guest-result-card'
 
 /** Inline, persistent alert for rate-limit / blocklist explanations (DESIGN §4.9). */
@@ -52,6 +53,7 @@ export function GuestHero() {
   // Created guest links, most-recent-first (§5.2 "stack as a short list").
   const [results, setResults] = useState<LinkResource[]>([])
 
+  const turnstile = useTurnstile('shorten')
   const inputRef = useRef<HTMLInputElement>(null)
   const fieldErrId = useId()
   const helperId = useId()
@@ -92,11 +94,16 @@ export function GuestHero() {
         }
       }
 
+      if (!turnstile.isReady) {
+        setAlert('Please complete the human verification below, then try again.')
+        return
+      }
+
       setSubmitting(true)
       try {
         const payload: CreateLinkPayload = { url: trimmed }
         if (isoExpiry) payload.expiresAt = isoExpiry
-        const { link } = await api.createLink(payload)
+        const { link } = await api.createLink(payload, turnstile.token)
         setResults((prev) => [link, ...prev])
         setUrl('')
         setExpiresAt('')
@@ -126,10 +133,12 @@ export function GuestHero() {
           setAlert('Network error. Check your connection and try again.')
         }
       } finally {
+        // Tokens are single-use: always fetch a fresh one for the next submit.
+        turnstile.reset()
         setSubmitting(false)
       }
     },
-    [url, expiresAt],
+    [url, expiresAt, turnstile],
   )
 
   return (
@@ -173,7 +182,13 @@ export function GuestHero() {
               className="h-11 pl-9 text-body"
             />
           </div>
-          <Button type="submit" size="lg" loading={submitting} className="sm:w-auto sm:px-6">
+          <Button
+            type="submit"
+            size="lg"
+            loading={submitting}
+            disabled={!turnstile.isReady}
+            className="sm:w-auto sm:px-6"
+          >
             Shorten
           </Button>
         </div>
@@ -189,6 +204,8 @@ export function GuestHero() {
         <p id={helperId} className="mt-2 text-body-sm text-text-tertiary">
           Links you create here expire in 24 hours.
         </p>
+
+        {turnstile.widget && <div className="mt-3">{turnstile.widget}</div>}
 
         {/* At-creation expiry affordance for guests (FR-32). */}
         <div className="mt-3">

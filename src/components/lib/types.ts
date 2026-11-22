@@ -47,6 +47,7 @@ export type ErrorCode =
   | 'NOT_FOUND'
   | 'BULK_LIMIT_EXCEEDED'
   | 'EMAIL_TAKEN'
+  | 'CAPTCHA_FAILED'
   | 'INTERNAL'
 
 /** Matches the error envelope in src/lib/errors.ts (§6.3). */

@@ -25,6 +25,7 @@ pub enum ErrorCode {
     NotFound,
     BulkLimitExceeded,
     EmailTaken,
+    CaptchaFailed,
     Internal,
 }
 
@@ -45,6 +46,7 @@ impl ErrorCode {
             ErrorCode::NotFound => "NOT_FOUND",
             ErrorCode::BulkLimitExceeded => "BULK_LIMIT_EXCEEDED",
             ErrorCode::EmailTaken => "EMAIL_TAKEN",
+            ErrorCode::CaptchaFailed => "CAPTCHA_FAILED",
             ErrorCode::Internal => "INTERNAL",
         }
     }
@@ -65,6 +67,7 @@ impl ErrorCode {
             ErrorCode::NotFound => StatusCode::NOT_FOUND,                   // 404
             ErrorCode::BulkLimitExceeded => StatusCode::PAYLOAD_TOO_LARGE,  // 413
             ErrorCode::EmailTaken => StatusCode::CONFLICT,                  // 409
+            ErrorCode::CaptchaFailed => StatusCode::FORBIDDEN,              // 403
             ErrorCode::Internal => StatusCode::INTERNAL_SERVER_ERROR,       // 500
         }
     }
@@ -100,6 +103,9 @@ impl ErrorCode {
             }
             ErrorCode::EmailTaken => {
                 "An account with that email already exists. Try signing in instead."
+            }
+            ErrorCode::CaptchaFailed => {
+                "We couldn't verify you're human. Complete the verification and try again."
             }
             ErrorCode::Internal => "Something went wrong on our end. Please try again.",
         }

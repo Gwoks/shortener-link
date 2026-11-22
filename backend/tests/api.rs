@@ -35,6 +35,8 @@ async fn setup() -> TestApp {
     cfg.sqlite_path = path_str.clone();
     cfg.base_url = "http://localhost:8080".into();
     cfg.auth_secret = "test-secret-key-for-integration-tests-32b".into();
+    // Turnstile is covered by tests/turnstile.rs; keep it off here regardless of env.
+    cfg.turnstile_secret = String::new();
 
     let pool = db::pool(&path_str).await.unwrap();
     db::migrate(&pool).await.unwrap();

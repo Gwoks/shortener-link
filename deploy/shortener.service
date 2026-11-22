@@ -6,11 +6,12 @@ After=network.target
 Type=simple
 User=ubuntu
 WorkingDirectory={{APP_DIR}}
-ExecStart={{APP_DIR}}/backend/target/release/shortener
+# Deploy-critical values are pinned on the command line: `env` assignments win
+# over EnvironmentFile, so a stray BASE_URL/PUBLIC_PORT in .env can't override them.
+ExecStart=/usr/bin/env BASE_URL={{BASE_URL}} PUBLIC_PORT={{APP_PORT}} STATIC_DIR={{APP_DIR}}/dist {{APP_DIR}}/backend/target/release/shortener
+# Optional secrets (e.g. TURNSTILE_SECRET_KEY); the leading '-' tolerates a missing file.
+EnvironmentFile=-{{APP_DIR}}/.env
 Environment="DATABASE_PATH={{APP_DIR}}/data/app.db"
-Environment="STATIC_DIR={{APP_DIR}}/dist"
-Environment="PUBLIC_PORT={{APP_PORT}}"
-Environment="BASE_URL={{BASE_URL}}"
 Restart=unless-stopped
 RestartSec=5
 

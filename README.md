@@ -98,9 +98,24 @@ Copy `.env.example` to `.env`. Defaults run the whole app locally. Key variables
 | `GOOGLE_CLIENT_ID` / `_SECRET` | optional | Enables Google sign-in (omit to hide it) |
 | `GITHUB_CLIENT_ID` / `_SECRET` | optional | Enables GitHub sign-in (omit to hide it) |
 | `MAXMIND_LICENSE_KEY` / `GEOIP_DB_PATH` | optional | Geo analytics (see below) |
+| `VITE_TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | optional | Cloudflare Turnstile bot protection (see below) |
 | `REDIRECT_STATUS`, `GUEST_TTL_HOURS`, `BULK_MAX`, `RL_*` | optional | Tunables with sensible defaults |
 
 OAuth is **optional** — with no Google/GitHub keys the app runs fine on email/password alone (fully offline).
+
+### Cloudflare Turnstile (optional)
+
+Turnstile protects **sign-in**, **sign-up**, and **shorten** (homepage guest form, *Create link*, and *Bulk*). Set both keys in `.env` (git-ignored):
+
+```bash
+VITE_TURNSTILE_SITE_KEY=<site key>    # public; baked into the SPA at `pnpm build`
+TURNSTILE_SECRET_KEY=<secret key>     # server-only; read by the Rust backend
+```
+
+- With both blank, Turnstile is fully disabled (handy for local dev and tests).
+- The SPA sends the widget token in the `CF-Turnstile-Response` header. The backend calls Cloudflare siteverify and checks `success`, the expected `action` (`login` / `signup` / `shorten`), and that `hostname` matches `BASE_URL`. Failures return `403 CAPTCHA_FAILED`, including when Cloudflare is unreachable (fail closed).
+- In the Cloudflare dashboard, list every hostname you serve from on the widget (`url.yourdomain.com`, plus `localhost` for local testing).
+- Rebuild the frontend (`pnpm build`) after changing the site key.
 
 ### Geo analytics (optional)
 
@@ -199,17 +214,26 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --defaul
 git clone https://github.com/Gwoks/shortener-link /home/ubuntu/shortener-link
 cd /home/ubuntu/shortener-link
 
-# 2. Build frontend
+# 2. Secrets (optional, git-ignored). Read by Vite at build time and by systemd
+#    via EnvironmentFile. BASE_URL/PUBLIC_PORT/STATIC_DIR are pinned in the
+#    unit's ExecStart, so values for those in this file are ignored.
+cat > .env << 'ENVEOF'
+VITE_TURNSTILE_SITE_KEY=<site key>
+TURNSTILE_SECRET_KEY=<secret key>
+ENVEOF
+chmod 600 .env
+
+# 3. Build frontend
 pnpm install && pnpm build
 
-# 3. Build backend
+# 4. Build backend
 cd backend && cargo build --release
 
-# 4. Create data dir
+# 5. Create data dir
 sudo mkdir -p /home/ubuntu/shortener-link/data
 sudo chown -R $(whoami):$(id -gn) /home/ubuntu/shortener-link/data
 
-# 5. systemd service
+# 6. systemd service
 sudo tee /etc/systemd/system/shortener.service > /dev/null << 'EOF'
 [Unit]
 Description=URL Shortener API Server
@@ -219,11 +243,9 @@ After=network.target
 Type=simple
 User=ubuntu
 WorkingDirectory=/home/ubuntu/shortener-link
-ExecStart=/home/ubuntu/shortener-link/backend/target/release/shortener
+ExecStart=/usr/bin/env BASE_URL=https://url.yourdomain.com PUBLIC_PORT=8081 STATIC_DIR=/home/ubuntu/shortener-link/dist /home/ubuntu/shortener-link/backend/target/release/shortener
+EnvironmentFile=-/home/ubuntu/shortener-link/.env
 Environment="DATABASE_PATH=/home/ubuntu/shortener-link/data/app.db"
-Environment="STATIC_DIR=/home/ubuntu/shortener-link/dist"
-Environment="PUBLIC_PORT=8081"
-Environment="BASE_URL=https://url.yourdomain.com"
 Restart=unless-stopped
 RestartSec=5
 
@@ -234,7 +256,7 @@ EOF
 sudo systemctl daemon-reload
 sudo systemctl enable --now shortener
 
-# 6. nginx
+# 7. nginx
 sudo tee /etc/nginx/sites-available/shortener > /dev/null << 'EOF'
 server {
     listen 80;
@@ -268,7 +290,7 @@ sudo ln -sf /etc/nginx/sites-available/shortener /etc/nginx/sites-enabled/shorte
 sudo rm -f /etc/nginx/sites-enabled/default
 sudo nginx -t && sudo systemctl reload nginx
 
-# 7. SSL (no email required)
+# 8. SSL (no email required)
 sudo certbot --nginx -d url.yourdomain.com \
   --noninteractive --agree-tos --register-unsafely-without-email --redirect
 ```

@@ -42,6 +42,14 @@ export class ApiError extends Error {
   }
 }
 
+/** Header carrying the Cloudflare Turnstile token (verified server-side). */
+export const TURNSTILE_HEADER = 'CF-Turnstile-Response'
+
+/** Build the Turnstile header when a token is present (none when disabled). */
+export function turnstileHeaders(token?: string | null): Record<string, string> {
+  return token ? { [TURNSTILE_HEADER]: token } : {}
+}
+
 async function request<T>(input: string, init?: RequestInit): Promise<T> {
   let res: Response
   try {
@@ -87,8 +95,15 @@ async function request<T>(input: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   // ── Links ──
-  createLink(payload: CreateLinkPayload): Promise<{ link: LinkResource }> {
-    return request('/api/links', { method: 'POST', body: JSON.stringify(payload) })
+  createLink(
+    payload: CreateLinkPayload,
+    turnstileToken?: string | null,
+  ): Promise<{ link: LinkResource }> {
+    return request('/api/links', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+      headers: turnstileHeaders(turnstileToken),
+    })
   },
   listLinks(params: {
     q?: string
@@ -120,8 +135,12 @@ export const api = {
   checkAlias(alias: string): Promise<AliasCheckResponse> {
     return request(`/api/links/check-alias?alias=${encodeURIComponent(alias)}`)
   },
-  bulk(urls: string[]): Promise<BulkResponse> {
-    return request('/api/links/bulk', { method: 'POST', body: JSON.stringify({ urls }) })
+  bulk(urls: string[], turnstileToken?: string | null): Promise<BulkResponse> {
+    return request('/api/links/bulk', {
+      method: 'POST',
+      body: JSON.stringify({ urls }),
+      headers: turnstileHeaders(turnstileToken),
+    })
   },
 
   // ── Analytics ──
@@ -141,8 +160,15 @@ export const api = {
   },
 
   // ── Auth ──
-  register(payload: { email: string; password: string; name?: string }): Promise<unknown> {
-    return request('/api/auth/register', { method: 'POST', body: JSON.stringify(payload) })
+  register(
+    payload: { email: string; password: string; name?: string },
+    turnstileToken?: string | null,
+  ): Promise<unknown> {
+    return request('/api/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+      headers: turnstileHeaders(turnstileToken),
+    })
   },
 }
 

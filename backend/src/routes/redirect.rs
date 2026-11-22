@@ -11,6 +11,7 @@ use axum::response::{IntoResponse, Response};
 use crate::queue::ClickMsg;
 use crate::routes::links::unlock_cookie_name;
 use crate::services::clicker_pages::{dead_link_html, gate_html};
+use crate::services::client_ip::client_ip;
 use crate::services::links::resolve_for_redirect;
 use crate::services::redirect::{resolve, Decision, RedirectContext};
 use crate::services::unlock::verify_token;
@@ -137,22 +138,6 @@ pub async fn handle_code(state: &AppState, code: &str, headers: &HeaderMap) -> R
             resp
         }
     }
-}
-
-fn client_ip(headers: &HeaderMap) -> Option<String> {
-    if let Some(xff) = headers.get("x-forwarded-for").and_then(|v| v.to_str().ok()) {
-        if let Some(first) = xff.split(',').next() {
-            let first = first.trim();
-            if !first.is_empty() {
-                return Some(first.to_string());
-            }
-        }
-    }
-    headers
-        .get("x-real-ip")
-        .and_then(|v| v.to_str().ok())
-        .map(|s| s.trim().to_string())
-        .filter(|s| !s.is_empty())
 }
 
 fn header_str(headers: &HeaderMap, name: header::HeaderName) -> Option<String> {

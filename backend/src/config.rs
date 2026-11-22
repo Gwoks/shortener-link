@@ -52,7 +52,14 @@ pub struct Config {
     pub unlock_session_ttl_sec: i64,
     pub rl_shorten: RlShorten,
     pub rl_unlock: RlUnlock,
+    /// Cloudflare Turnstile secret. Blank disables verification (dev/tests).
+    pub turnstile_secret: String,
+    /// Siteverify endpoint (overridable so tests can point at a local mock).
+    pub turnstile_verify_url: String,
 }
+
+pub const DEFAULT_TURNSTILE_VERIFY_URL: &str =
+    "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 
 impl Config {
     pub fn from_env() -> Self {
@@ -95,6 +102,8 @@ impl Config {
                 window_sec: int_env("RL_UNLOCK_WINDOW_SEC", 300),
                 lockout_sec: int_env("RL_UNLOCK_LOCKOUT_SEC", 900),
             },
+            turnstile_secret: str_env("TURNSTILE_SECRET_KEY", "").trim().to_string(),
+            turnstile_verify_url: str_env("TURNSTILE_VERIFY_URL", DEFAULT_TURNSTILE_VERIFY_URL),
         }
     }
 }

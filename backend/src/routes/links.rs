@@ -13,8 +13,10 @@ use crate::error::{ApiError, ErrorCode};
 use crate::ids::cuid;
 use crate::models::Link;
 use crate::services::alias;
+use crate::services::client_ip::client_ip;
 use crate::services::links::{self, CreateLinkArgs};
 use crate::services::serialize::serialize_link;
+use crate::services::turnstile;
 use crate::services::utm::UtmParams;
 use crate::services::validation::{
     self, CreateLinkInput, Patch, PatchLinkInput, UtmInput,
@@ -40,22 +42,6 @@ pub fn router() -> Router<AppState> {
 fn internal<E: std::fmt::Display>(e: E) -> ApiError {
     tracing::error!("links route error: {e}");
     ApiError::new(ErrorCode::Internal)
-}
-
-fn client_ip(headers: &axum::http::HeaderMap) -> Option<String> {
-    if let Some(xff) = headers.get("x-forwarded-for").and_then(|v| v.to_str().ok()) {
-        if let Some(first) = xff.split(',').next() {
-            let first = first.trim();
-            if !first.is_empty() {
-                return Some(first.to_string());
-            }
-        }
-    }
-    headers
-        .get("x-real-ip")
-        .and_then(|v| v.to_str().ok())
-        .map(|s| s.trim().to_string())
-        .filter(|s| !s.is_empty())
 }
 
 /// Stable rate-limit key from the client IP (or a fallback when absent).
@@ -139,6 +125,7 @@ async fn create(
     headers: axum::http::HeaderMap,
     body: Result<Json<CreateBody>, axum::extract::rejection::JsonRejection>,
 ) -> Result<Response, ApiError> {
+    turnstile::verify(&state.cfg, &headers, turnstile::ACTION_SHORTEN).await?;
     let Json(body) = body.map_err(|_| {
         ApiError::new(ErrorCode::ValidationError).with_message("Request body must be valid JSON.")
     })?;
@@ -587,6 +574,7 @@ async fn bulk(
     headers: axum::http::HeaderMap,
     body: Result<Json<BulkBody>, axum::extract::rejection::JsonRejection>,
 ) -> Result<Json<Value>, ApiError> {
+    turnstile::verify(&state.cfg, &headers, turnstile::ACTION_SHORTEN).await?;
     let Json(body) = body.map_err(|_| {
         ApiError::new(ErrorCode::ValidationError).with_message("Request body must be valid JSON.")
     })?;

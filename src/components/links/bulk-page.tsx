@@ -21,6 +21,7 @@ import type { BulkResultRow } from '../lib/types'
 import { Button } from '../ui/button'
 import { Textarea } from '../ui/input'
 import { useToast } from '../ui/toast'
+import { useTurnstile } from '../security/turnstile'
 import { BulkResults } from './bulk-results'
 
 /**
@@ -51,6 +52,7 @@ export function BulkPage() {
   const [state, setState] = useState<RunState>({ phase: 'idle' })
   // Monotonic token so a slow batch can't overwrite a newer run.
   const reqId = useRef(0)
+  const turnstile = useTurnstile('shorten')
 
   const urls = useMemo(() => parseUrlLines(text), [text])
   const count = urls.length
@@ -68,10 +70,17 @@ export function BulkPage() {
       error('Too many URLs', `Submit at most ${BULK_MAX} URLs at a time.`)
       return
     }
+    if (!turnstile.isReady) {
+      error('Verification needed', 'Complete the human verification, then try again.')
+      return
+    }
     const id = ++reqId.current
     setState({ phase: 'submitting' })
+    // Tokens are single-use: capture this one, then request a fresh one.
+    const token = turnstile.token
+    turnstile.reset()
     try {
-      const res = await api.bulk(urls)
+      const res = await api.bulk(urls, token)
       if (id !== reqId.current) return
       setState({ phase: 'done', results: res.results, submittedAt: Date.now() })
       const okCount = res.results.filter((r) => r.ok).length
@@ -94,7 +103,7 @@ export function BulkPage() {
       setState({ phase: 'error', message })
       error('Couldn’t shorten the batch', message)
     }
-  }, [submitting, empty, overLimit, urls, success, error])
+  }, [submitting, empty, overLimit, urls, success, error, turnstile])
 
   const clearAll = useCallback(() => {
     setText('')
@@ -153,8 +162,15 @@ export function BulkPage() {
             </p>
           )}
 
+          {turnstile.widget && <div className="mt-4">{turnstile.widget}</div>}
+
           <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center">
-            <Button type="button" onClick={run} loading={submitting} disabled={empty || overLimit}>
+            <Button
+              type="button"
+              onClick={run}
+              loading={submitting}
+              disabled={empty || overLimit || !turnstile.isReady}
+            >
               <ListChecks className="h-4 w-4" aria-hidden="true" />
               {submitting ? 'Shortening…' : 'Shorten all'}
             </Button>
@@ -187,7 +203,13 @@ export function BulkPage() {
           >
             <h3 className="text-h4 text-text-primary">Couldn’t shorten the batch</h3>
             <p className="mx-auto mt-1.5 max-w-sm text-body-sm text-text-secondary">{state.message}</p>
-            <Button type="button" variant="secondary" className="mt-5" onClick={run}>
+            <Button
+              type="button"
+              variant="secondary"
+              className="mt-5"
+              onClick={run}
+              disabled={!turnstile.isReady}
+            >
               Try again
             </Button>
           </div>

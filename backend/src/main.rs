@@ -20,6 +20,14 @@ async fn main() -> anyhow::Result<()> {
 
     let cfg = Config::from_env();
 
+    // Make the bot-protection state obvious in the service logs: running without
+    // a secret silently disables Turnstile on sign-in, sign-up and shorten.
+    if cfg.turnstile_secret.is_empty() {
+        tracing::warn!("TURNSTILE_SECRET_KEY is not set — Turnstile verification is DISABLED");
+    } else {
+        tracing::info!("Turnstile verification enabled (sign-in, sign-up, shorten)");
+    }
+
     // Ensure the SQLite parent directory exists before opening.
     if cfg.sqlite_path != ":memory:" {
         if let Some(parent) = std::path::Path::new(&cfg.sqlite_path).parent() {
