@@ -7,7 +7,6 @@ pub mod analytics;
 pub mod blocklist;
 pub mod cache;
 pub mod clicker_pages;
-pub mod client_ip;
 pub mod geo;
 pub mod links;
 pub mod qr;

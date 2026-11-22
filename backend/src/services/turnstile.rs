@@ -14,7 +14,7 @@ use serde::Deserialize;
 
 use crate::config::Config;
 use crate::error::{ApiError, ErrorCode};
-use crate::services::client_ip::client_ip;
+use crate::util::client_ip;
 
 pub const TOKEN_HEADER: &str = "cf-turnstile-response";
 pub const ACTION_LOGIN: &str = "login";

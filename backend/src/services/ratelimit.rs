@@ -163,7 +163,13 @@ impl Limiter {
         }
         // Token bucket throttle before the hard lockout trips.
         let bucket_key = format!("rl:unlock:{link_id}:{key}");
-        let r = self.consume_key(&bucket_key, cfg.capacity, cfg.refill, cfg.window_sec, now_ms);
+        let r = self.consume_key(
+            &bucket_key,
+            cfg.capacity,
+            cfg.refill,
+            cfg.window_sec,
+            now_ms,
+        );
         if r.allowed {
             Ok(())
         } else {
@@ -178,18 +184,14 @@ impl Limiter {
     }
 
     /// Deterministic variant with an injected clock (ms).
-    pub fn record_unlock_failure_at(
-        &self,
-        link_id: &str,
-        key: &str,
-        cfg: &RlUnlock,
-        now_ms: i64,
-    ) {
+    pub fn record_unlock_failure_at(&self, link_id: &str, key: &str, cfg: &RlUnlock, now_ms: i64) {
         let fail_key = format!("rl:unlock:fail:{link_id}:{key}");
         let window_ms = cfg.window_sec * 1000;
         let fails = {
             let mut fails_map = self.unlock_fails.lock().expect("fail lock");
-            let entry = fails_map.entry(fail_key.clone()).or_insert((0, now_ms + window_ms));
+            let entry = fails_map
+                .entry(fail_key.clone())
+                .or_insert((0, now_ms + window_ms));
             // Reset the counter once the window has elapsed (mirrors the EXPIRE).
             if now_ms >= entry.1 {
                 *entry = (0, now_ms + window_ms);
@@ -204,7 +206,10 @@ impl Limiter {
                 .lock()
                 .expect("lockout lock")
                 .insert(lock_key, now_ms + cfg.lockout_sec * 1000);
-            self.unlock_fails.lock().expect("fail lock").remove(&fail_key);
+            self.unlock_fails
+                .lock()
+                .expect("fail lock")
+                .remove(&fail_key);
         }
     }
 
@@ -212,8 +217,14 @@ impl Limiter {
     pub fn clear_unlock_failures(&self, link_id: &str, key: &str) {
         let fail_key = format!("rl:unlock:fail:{link_id}:{key}");
         let lock_key = format!("rl:unlock:lock:{link_id}:{key}");
-        self.unlock_fails.lock().expect("fail lock").remove(&fail_key);
-        self.unlock_lockouts.lock().expect("lockout lock").remove(&lock_key);
+        self.unlock_fails
+            .lock()
+            .expect("fail lock")
+            .remove(&fail_key);
+        self.unlock_lockouts
+            .lock()
+            .expect("lockout lock")
+            .remove(&lock_key);
     }
 }
 

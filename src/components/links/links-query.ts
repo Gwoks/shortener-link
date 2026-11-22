@@ -4,6 +4,8 @@
  * map cleanly onto the GET /api/links params (ARCHITECTURE §6.2).
  */
 
+import type { LinkListParams } from '@/data/query-keys'
+
 export type StatusFilter = 'all' | 'active' | 'expiring' | 'expired' | 'protected'
 export type SortKey = 'created' | 'clicks'
 export type SortOrder = 'asc' | 'desc'
@@ -17,6 +19,18 @@ export interface LinksQuery {
 }
 
 export const PAGE_SIZE = 20
+
+/** Translate UI query state into the API's list parameters. */
+export function listParamsFromQuery(query: LinksQuery): LinkListParams {
+  return {
+    q: query.q.trim() || undefined,
+    status: query.status === 'all' ? undefined : query.status,
+    sort: query.sort,
+    order: query.order,
+    page: query.page,
+    pageSize: PAGE_SIZE,
+  }
+}
 
 export const DEFAULT_QUERY: LinksQuery = {
   q: '',

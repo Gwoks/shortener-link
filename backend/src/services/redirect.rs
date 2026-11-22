@@ -184,7 +184,9 @@ mod tests {
         link.status = "DEACTIVATED".to_string();
         assert_eq!(
             resolve(Some(&link), &ctx(0)),
-            Decision::Dead { reason: "deactivated".into() }
+            Decision::Dead {
+                reason: "deactivated".into()
+            }
         );
     }
 
@@ -194,7 +196,9 @@ mod tests {
         link.status = "EXPIRED".to_string();
         assert_eq!(
             resolve(Some(&link), &ctx(0)),
-            Decision::Dead { reason: "expired".into() }
+            Decision::Dead {
+                reason: "expired".into()
+            }
         );
     }
 
@@ -204,7 +208,12 @@ mod tests {
         link.expires_at = Some("2020-01-01T00:00:00.000Z".to_string());
         // now is well after expiry
         let d = resolve(Some(&link), &ctx(2_000_000_000_000));
-        assert_eq!(d, Decision::Dead { reason: "expired".into() });
+        assert_eq!(
+            d,
+            Decision::Dead {
+                reason: "expired".into()
+            }
+        );
     }
 
     #[test]
@@ -234,7 +243,9 @@ mod tests {
         link.click_count = 5;
         assert_eq!(
             resolve(Some(&link), &ctx(0)),
-            Decision::Dead { reason: "max-clicks".into() }
+            Decision::Dead {
+                reason: "max-clicks".into()
+            }
         );
     }
 
@@ -247,7 +258,9 @@ mod tests {
         c.live_click_count = Some(5);
         assert_eq!(
             resolve(Some(&link), &c),
-            Decision::Dead { reason: "max-clicks".into() }
+            Decision::Dead {
+                reason: "max-clicks".into()
+            }
         );
     }
 
@@ -290,7 +303,9 @@ mod tests {
         link.has_password = true;
         assert_eq!(
             resolve(Some(&link), &ctx(0)),
-            Decision::Dead { reason: "deactivated".into() }
+            Decision::Dead {
+                reason: "deactivated".into()
+            }
         );
     }
 }

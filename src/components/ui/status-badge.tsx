@@ -19,7 +19,13 @@ const CONFIG: Record<
   pending: { icon: Loader2, label: 'Fetching…', cls: 'text-info-fg bg-info-bg', spin: true },
 }
 
-export function StatusBadge({ status, className }: { status: PresentationStatus; className?: string }) {
+export function StatusBadge({
+  status,
+  className,
+}: {
+  status: PresentationStatus
+  className?: string
+}) {
   const c = CONFIG[status]
   const Icon = c.icon
   return (

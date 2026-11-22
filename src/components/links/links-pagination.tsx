@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * Numbered pager (DESIGN §4.12, FR-29, AC-37). Shows a compact window of page
  * numbers with the current page indicated (aria-current) and prev/next disabled
@@ -69,7 +67,11 @@ export function LinksPagination({
 
           {pageWindow(page, totalPages).map((p, i) =>
             p === -1 ? (
-              <span key={`gap-${i}`} className="px-1 text-body-sm text-text-tertiary" aria-hidden="true">
+              <span
+                key={`gap-${i}`}
+                className="px-1 text-body-sm text-text-tertiary"
+                aria-hidden="true"
+              >
                 …
               </span>
             ) : (

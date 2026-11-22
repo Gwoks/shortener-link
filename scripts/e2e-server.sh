@@ -10,7 +10,8 @@ ROOT="$PWD"
 PORT="${E2E_PORT:-8080}"
 ( cd backend && cargo build --bin shortener --bin seed >&2 )
 
-DB="$(mktemp -u "${TMPDIR:-/tmp}/e2e-XXXXXX.db")"
+# BSD mktemp only substitutes trailing X's, so append the suffix afterwards.
+DB="$(mktemp -u "${TMPDIR:-/tmp}/e2e-XXXXXX").db"
 export SQLITE_PATH="$DB"
 export PUBLIC_PORT="$PORT"
 export BASE_URL="http://localhost:$PORT"

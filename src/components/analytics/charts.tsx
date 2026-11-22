@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * Recharts wrappers (DESIGN §5.7/§5.8). Recharts is client-only, so every export
  * here is a client component; the surrounding controllers only mount these after
@@ -44,7 +42,7 @@ function TooltipBox({
 }) {
   return (
     <div
-      className="rounded-sm border px-3 py-2 text-body-sm shadow-md"
+      className="rounded-sm border px-3 py-2 text-body-sm shadow-popover"
       style={{ backgroundColor: theme.surface, borderColor: theme.border, color: theme.text }}
     >
       {title && <div className="mb-1 font-medium">{title}</div>}
@@ -128,7 +126,11 @@ export function ClicksOverTimeChart({
                   theme={theme}
                   title={dayLabel(String(label))}
                   rows={[
-                    { label: 'Clicks', value: Number(payload[0]?.value ?? 0), color: theme.series[0] },
+                    {
+                      label: 'Clicks',
+                      value: Number(payload[0]?.value ?? 0),
+                      color: theme.series[0],
+                    },
                     {
                       label: 'Unique',
                       value: Number(payload[1]?.value ?? 0),
@@ -238,13 +240,7 @@ export function BreakdownBarChart({
 }
 
 /** Donut chart for device/browser split (AC-10). Legend lives in the table. */
-export function DonutChart({
-  data,
-  height = 220,
-}: {
-  data: BreakdownDatum[]
-  height?: number
-}) {
+export function DonutChart({ data, height = 220 }: { data: BreakdownDatum[]; height?: number }) {
   const theme = useChartTheme()
   const mounted = useMounted()
   if (!mounted) return <ChartBox height={height} />
@@ -278,7 +274,10 @@ export function DonutChart({
                     {
                       label: String(payload[0]?.name ?? ''),
                       value: Number(payload[0]?.value ?? 0),
-                      color: theme.series[(Number(payload[0]?.payload?.colorIndex) || 0) % theme.series.length],
+                      color:
+                        theme.series[
+                          (Number(payload[0]?.payload?.colorIndex) || 0) % theme.series.length
+                        ],
                     },
                   ]}
                 />

@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * Copy-to-clipboard control (DESIGN §4.3, FR-42, AC-47). On click: copies, fires
  * a "Link Copied!" toast AND flips to a transient copied state — the toast is
@@ -59,9 +57,12 @@ export function CopyButton({
   const [copied, setCopied] = useState(false)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  useEffect(() => () => {
-    if (timer.current) clearTimeout(timer.current)
-  }, [])
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current)
+    },
+    [],
+  )
 
   const onCopy = useCallback(async () => {
     const ok = await writeClipboard(value)

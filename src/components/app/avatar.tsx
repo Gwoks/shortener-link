@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * Avatar (DESIGN §4.12). Renders the provider image when present, otherwise an
  * initials fallback derived from name/email. Round (`--radius-full`), decorative

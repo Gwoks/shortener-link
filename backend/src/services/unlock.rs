@@ -9,47 +9,9 @@
 //!   sig     = base64url( HMAC-SHA256(secret, payload) )   (no padding)
 //!   token   = `${exp}.${sig}`
 
+use crate::crypto::hmac_sha256;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
-use sha2::{Digest, Sha256};
-
-const BLOCK_SIZE: usize = 64; // SHA-256 block size in bytes
-
-/// HMAC-SHA256(key, message). Implemented over `sha2` to avoid adding an `hmac`
-/// crate dependency (RFC 2104).
-fn hmac_sha256(key: &[u8], message: &[u8]) -> [u8; 32] {
-    // Shorten long keys.
-    let mut key_block = [0u8; BLOCK_SIZE];
-    if key.len() > BLOCK_SIZE {
-        let mut h = Sha256::new();
-        h.update(key);
-        let digest = h.finalize();
-        key_block[..32].copy_from_slice(&digest);
-    } else {
-        key_block[..key.len()].copy_from_slice(key);
-    }
-
-    let mut ipad = [0x36u8; BLOCK_SIZE];
-    let mut opad = [0x5cu8; BLOCK_SIZE];
-    for i in 0..BLOCK_SIZE {
-        ipad[i] ^= key_block[i];
-        opad[i] ^= key_block[i];
-    }
-
-    let mut inner = Sha256::new();
-    inner.update(ipad);
-    inner.update(message);
-    let inner_digest = inner.finalize();
-
-    let mut outer = Sha256::new();
-    outer.update(opad);
-    outer.update(inner_digest);
-    let out = outer.finalize();
-
-    let mut result = [0u8; 32];
-    result.copy_from_slice(&out);
-    result
-}
 
 fn sign(payload: &str, secret: &str) -> String {
     let mac = hmac_sha256(secret.as_bytes(), payload.as_bytes());
@@ -160,16 +122,5 @@ mod tests {
         assert!(!sig.contains('='));
         assert!(!sig.contains('+'));
         assert!(!sig.contains('/'));
-    }
-
-    #[test]
-    fn hmac_known_vector() {
-        // RFC-style sanity: HMAC-SHA256("key", "The quick brown fox jumps over the lazy dog")
-        // = f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8
-        let mac = hmac_sha256(b"key", b"The quick brown fox jumps over the lazy dog");
-        assert_eq!(
-            hex::encode(mac),
-            "f7bc83f430538424b13298e6aa6fb143ef4d59a14946175997479dbc2d1a3cd8"
-        );
     }
 }

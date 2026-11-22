@@ -31,14 +31,13 @@ pub fn lookup(
         Err(_) => return (None, None),
     };
 
-    let country = city
-        .country
-        .as_ref()
-        .and_then(|c| {
-            c.iso_code
-                .map(|s| s.to_string())
-                .or_else(|| c.names.as_ref().and_then(|n| n.get("en").map(|s| s.to_string())))
-        });
+    let country = city.country.as_ref().and_then(|c| {
+        c.iso_code.map(|s| s.to_string()).or_else(|| {
+            c.names
+                .as_ref()
+                .and_then(|n| n.get("en").map(|s| s.to_string()))
+        })
+    });
 
     let city_name = city
         .city

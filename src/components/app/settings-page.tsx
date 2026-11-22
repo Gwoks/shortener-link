@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * Settings screen (DESIGN §5.11 + account). A quiet, single-column page
  * (max-width ~640px) with two sections:
@@ -8,24 +6,19 @@
  *    are hashed + truncated (never stored raw) and click events have a finite
  *    retention window — so the product is honest about what it keeps.
  *
- * Client component: it owns the interactive sign-out; account identity is
- * passed in from the server route's session (never trusts the client).
+ * Account identity comes from the shared session context (useAuth).
  */
 import { LogOut, ShieldCheck, UserRound } from 'lucide-react'
 import { useCallback, useState } from 'react'
 import { signOut } from '@/auth/auth-client'
+import { useAuth } from '@/auth/auth-context'
+import { Card } from '../ui/card'
 import { PageHeader } from './app-shell'
 import { Avatar } from './avatar'
 import { Button } from '../ui/button'
 
 /** Default click-event retention window (ARCHITECTURE §4.6, env CLICK_RETENTION_DAYS). */
 const RETENTION_DAYS = 400
-
-export interface SettingsUser {
-  name?: string | null
-  email?: string | null
-  image?: string | null
-}
 
 function Section({
   icon: Icon,
@@ -39,25 +32,26 @@ function Section({
   children: React.ReactNode
 }) {
   return (
-    <section className="rounded-md border border-border bg-surface p-5 sm:p-6">
+    <Card as="section">
       <div className="flex items-start gap-3">
         <span
           aria-hidden="true"
-          className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-surface-subtle text-text-secondary"
+          className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-pill bg-sky-tint text-accent"
         >
           <Icon className="h-[18px] w-[18px]" />
         </span>
         <div className="min-w-0 flex-1">
-          <h3 className="text-h4 text-text-primary">{title}</h3>
+          <h3 className="text-title text-text-primary">{title}</h3>
           {description && <p className="mt-0.5 text-body-sm text-text-secondary">{description}</p>}
           <div className="mt-4">{children}</div>
         </div>
       </div>
-    </section>
+    </Card>
   )
 }
 
-export function SettingsPage({ user }: { user: SettingsUser }) {
+export function SettingsPage() {
+  const user = useAuth().user ?? { name: null, email: null, image: null }
   const [signingOut, setSigningOut] = useState(false)
   const displayName = user.name || user.email || 'Your account'
 
@@ -68,10 +62,7 @@ export function SettingsPage({ user }: { user: SettingsUser }) {
 
   return (
     <div>
-      <PageHeader
-        title="Settings"
-        description="Manage your appearance, account, and data preferences."
-      />
+      <PageHeader title="Settings" description="Manage your account and data preferences." />
 
       <div className="mx-auto w-full max-w-xl space-y-5">
         {/* Account */}

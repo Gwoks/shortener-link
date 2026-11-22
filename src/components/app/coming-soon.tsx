@@ -28,7 +28,7 @@ export function ComingSoon({
         <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-pill bg-surface-subtle text-text-tertiary">
           <Icon className="h-6 w-6" aria-hidden="true" />
         </span>
-        <h3 className="text-h4 text-text-primary">{title} is coming soon</h3>
+        <h3 className="text-title text-text-primary">{title} is coming soon</h3>
         <p className="mt-1.5 max-w-sm text-body-sm text-text-secondary">{description}</p>
         <Link
           to={backHref}

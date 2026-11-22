@@ -3,25 +3,24 @@
 use axum::extract::{Path, Query, State};
 use axum::http::{header::SET_COOKIE, HeaderValue, StatusCode};
 use axum::response::{IntoResponse, Response};
-use axum::{Json, Router};
 use axum::routing::{get, post};
+use axum::{Json, Router};
 use serde::Deserialize;
 use serde_json::{json, Value};
 
-use crate::auth::extractor::{CurrentUser, OptionalUser};
-use crate::error::{ApiError, ErrorCode};
+use crate::auth::extractor::{cookie_from_headers, CurrentUser, OptionalUser};
+use crate::crypto::guest_key_hash;
+use crate::db::is_unique_violation;
+use crate::error::{internal, ApiError, ErrorCode};
 use crate::ids::cuid;
 use crate::models::Link;
 use crate::services::alias;
-use crate::services::client_ip::client_ip;
 use crate::services::links::{self, CreateLinkArgs};
 use crate::services::serialize::serialize_link;
 use crate::services::turnstile;
-use crate::services::utm::UtmParams;
-use crate::services::validation::{
-    self, CreateLinkInput, Patch, PatchLinkInput, UtmInput,
-};
+use crate::services::validation::{self, CreateLinkInput, Patch, PatchLinkInput, UtmInput};
 use crate::state::AppState;
+use crate::util::{client_ip, iso};
 
 pub const GUEST_COOKIE: &str = "guest_id";
 
@@ -39,47 +38,9 @@ pub fn router() -> Router<AppState> {
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
-fn internal<E: std::fmt::Display>(e: E) -> ApiError {
-    tracing::error!("links route error: {e}");
-    ApiError::new(ErrorCode::Internal)
-}
-
 /// Stable rate-limit key from the client IP (or a fallback when absent).
 fn rl_key(ip: &Option<String>) -> String {
     ip.clone().unwrap_or_else(|| "noip".to_string())
-}
-
-fn guest_key_hash(state: &AppState, guest_id: &str) -> String {
-    // Mirror hash.ts guestKeyHash: HMAC-SHA256(pepper, "guest|"+id) → hex.
-    let key = state.cfg.visitor_ip_pepper.as_bytes();
-    let msg = format!("guest|{guest_id}");
-    hmac_hex(key, msg.as_bytes())
-}
-
-fn hmac_hex(key: &[u8], message: &[u8]) -> String {
-    use sha2::{Digest, Sha256};
-    const BLOCK: usize = 64;
-    let mut key_block = [0u8; BLOCK];
-    if key.len() > BLOCK {
-        let d = Sha256::digest(key);
-        key_block[..32].copy_from_slice(&d);
-    } else {
-        key_block[..key.len()].copy_from_slice(key);
-    }
-    let mut ipad = [0x36u8; BLOCK];
-    let mut opad = [0x5cu8; BLOCK];
-    for i in 0..BLOCK {
-        ipad[i] ^= key_block[i];
-        opad[i] ^= key_block[i];
-    }
-    let mut inner = Sha256::new();
-    inner.update(ipad);
-    inner.update(message);
-    let inner_d = inner.finalize();
-    let mut outer = Sha256::new();
-    outer.update(opad);
-    outer.update(inner_d);
-    hex::encode(outer.finalize())
 }
 
 // ─── POST /api/links ─────────────────────────────────────────────────────────
@@ -149,14 +110,16 @@ async fn create(
     let user_id = user.as_ref().map(|u| u.id.clone());
 
     // Guest identity (FR-33/34): mint a guest cookie on first guest shorten.
-    let mut guest_id = cookie_value_from(&headers, GUEST_COOKIE);
+    let mut guest_id = cookie_from_headers(&headers, GUEST_COOKIE);
     let mut set_guest_cookie = false;
     if user_id.is_none() && guest_id.is_none() {
-        guest_id = Some(cuid_uuid());
+        guest_id = Some(cuid());
         set_guest_cookie = true;
     }
     let guest_key = if user_id.is_none() {
-        guest_id.as_ref().map(|g| guest_key_hash(&state, g))
+        guest_id
+            .as_ref()
+            .map(|g| guest_key_hash(&state.cfg.visitor_ip_pepper, g))
     } else {
         None
     };
@@ -166,10 +129,10 @@ async fn create(
         CreateLinkArgs {
             url: validated.url,
             alias: validated.alias,
-            expires_at: validated.expires_at.map(iso_from_dt),
+            expires_at: validated.expires_at.map(iso),
             max_clicks: validated.max_clicks,
             password: validated.password,
-            utm: validated.utm.map(to_utm_params),
+            utm: validated.utm,
             owner_id: user_id.clone(),
             is_guest: user_id.is_none(),
             guest_key,
@@ -199,27 +162,6 @@ async fn create(
     Ok(resp)
 }
 
-fn cookie_value_from(headers: &axum::http::HeaderMap, name: &str) -> Option<String> {
-    let h = headers
-        .get(axum::http::header::COOKIE)
-        .and_then(|v| v.to_str().ok());
-    crate::auth::extractor::cookie_from_header(h, name)
-}
-
-fn iso_from_dt(dt: chrono::DateTime<chrono::Utc>) -> String {
-    use chrono::SecondsFormat;
-    dt.to_rfc3339_opts(SecondsFormat::Millis, true)
-}
-
-fn to_utm_params(u: crate::services::utm::UtmParams) -> UtmParams {
-    u
-}
-
-fn cuid_uuid() -> String {
-    // Guest id need only be opaque + unique; reuse cuid for a collision-free id.
-    cuid()
-}
-
 // ─── GET /api/links ──────────────────────────────────────────────────────────
 
 #[derive(Debug, Deserialize, Default)]
@@ -240,14 +182,21 @@ async fn list(
     user: CurrentUser,
     Query(q): Query<ListQuery>,
 ) -> Result<Json<Value>, ApiError> {
-    let search = q
-        .q
-        .or(q.search)
-        .map(|s| s.trim().to_string())
-        .filter(|s| !s.is_empty());
+    let search =
+        q.q.or(q.search)
+            .map(|s| s.trim().to_string())
+            .filter(|s| !s.is_empty());
     let status = q.status.as_deref();
-    let sort = if q.sort.as_deref() == Some("clicks") { "clicks" } else { "created" };
-    let order = if q.order.as_deref() == Some("asc") { "ASC" } else { "DESC" };
+    let sort = if q.sort.as_deref() == Some("clicks") {
+        "clicks"
+    } else {
+        "created"
+    };
+    let order = if q.order.as_deref() == Some("asc") {
+        "ASC"
+    } else {
+        "DESC"
+    };
     let page = q
         .page
         .and_then(|p| p.parse::<i64>().ok())
@@ -259,8 +208,8 @@ async fn list(
         .unwrap_or(20)
         .clamp(1, 100);
 
-    let now = iso_from_dt(chrono::Utc::now());
-    let soon = iso_from_dt(chrono::Utc::now() + chrono::Duration::hours(24));
+    let now = iso(chrono::Utc::now());
+    let soon = iso(chrono::Utc::now() + chrono::Duration::hours(24));
 
     // Build the WHERE clause matching the oracle's Prisma filters.
     let mut conds: Vec<String> = vec!["owner_id = ?".to_string()];
@@ -289,9 +238,7 @@ async fn list(
     }
 
     if let Some(s) = &search {
-        conds.push(
-            "(code LIKE ? OR destination_url LIKE ? OR meta_title LIKE ?)".into(),
-        );
+        conds.push("(code LIKE ? OR destination_url LIKE ? OR meta_title LIKE ?)".into());
         let like_lower = format!("%{}%", s.to_lowercase());
         let like = format!("%{s}%");
         binds.push(like_lower);
@@ -300,7 +247,11 @@ async fn list(
     }
 
     let where_sql = conds.join(" AND ");
-    let order_col = if sort == "clicks" { "click_count" } else { "created_at" };
+    let order_col = if sort == "clicks" {
+        "click_count"
+    } else {
+        "created_at"
+    };
 
     // total
     let count_sql = format!("SELECT COUNT(*) FROM link WHERE {where_sql}");
@@ -338,26 +289,15 @@ async fn list(
 
 // ─── GET/PATCH/DELETE /api/links/:id ───────────────────────────────────────────
 
-async fn load_owned(state: &AppState, id: &str, user_id: &str) -> Result<Link, ApiError> {
-    let link: Option<Link> = sqlx::query_as("SELECT * FROM link WHERE id = ?")
-        .bind(id)
-        .fetch_optional(&state.pool)
-        .await
-        .map_err(internal)?;
-    let link = link.ok_or_else(|| ApiError::new(ErrorCode::NotFound))?;
-    if link.owner_id.as_deref() != Some(user_id) {
-        return Err(ApiError::new(ErrorCode::Forbidden));
-    }
-    Ok(link)
-}
-
 async fn get_one(
     State(state): State<AppState>,
     user: CurrentUser,
     Path(id): Path<String>,
 ) -> Result<Json<Value>, ApiError> {
-    let link = load_owned(&state, &id, &user.id).await?;
-    Ok(Json(json!({ "link": serialize_link(&link, &state.cfg.base_url) })))
+    let link = links::load_owned_link(&state.pool, &id, &user.id).await?;
+    Ok(Json(
+        json!({ "link": serialize_link(&link, &state.cfg.base_url) }),
+    ))
 }
 
 async fn patch_one(
@@ -369,7 +309,7 @@ async fn patch_one(
     let Json(raw) = body.map_err(|_| {
         ApiError::new(ErrorCode::ValidationError).with_message("Request body must be valid JSON.")
     })?;
-    let existing = load_owned(&state, &id, &user.id).await?;
+    let existing = links::load_owned_link(&state.pool, &id, &user.id).await?;
 
     let input = parse_patch_body(&raw)?;
     let validated = validation::validate_patch(&input)?;
@@ -386,7 +326,7 @@ async fn patch_one(
     match &validated.expires_at {
         Patch::Set(dt) => {
             sets.push("expires_at = ?".into());
-            binds.push(BindVal::Str(iso_from_dt(*dt)));
+            binds.push(BindVal::Str(iso(*dt)));
         }
         Patch::Null => {
             sets.push("expires_at = NULL".into());
@@ -446,7 +386,7 @@ async fn patch_one(
     }
 
     sets.push("updated_at = ?".into());
-    binds.push(BindVal::Str(iso_from_dt(chrono::Utc::now())));
+    binds.push(BindVal::Str(iso(chrono::Utc::now())));
 
     let sql = format!("UPDATE link SET {} WHERE id = ?", sets.join(", "));
     let mut q = sqlx::query(&sql);
@@ -459,7 +399,7 @@ async fn patch_one(
     q = q.bind(&existing.id);
     match q.execute(&state.pool).await {
         Ok(_) => {}
-        Err(e) if is_unique(&e) => {
+        Err(e) if is_unique_violation(&e) => {
             return Err(ApiError::new(ErrorCode::AliasTaken).with_field("alias"));
         }
         Err(e) => return Err(internal(e)),
@@ -478,7 +418,9 @@ async fn patch_one(
         .fetch_one(&state.pool)
         .await
         .map_err(internal)?;
-    Ok(Json(json!({ "link": serialize_link(&updated, &state.cfg.base_url) })))
+    Ok(Json(
+        json!({ "link": serialize_link(&updated, &state.cfg.base_url) }),
+    ))
 }
 
 enum BindVal {
@@ -486,21 +428,18 @@ enum BindVal {
     Int(i64),
 }
 
-fn is_unique(e: &sqlx::Error) -> bool {
-    if let sqlx::Error::Database(db) = e {
-        return db.message().contains("UNIQUE constraint failed");
-    }
-    false
-}
-
 /// Translate a JSON patch body into `PatchLinkInput`, honoring absent vs null vs
 /// value semantics for the three nullable fields (expiresAt/maxClicks/password).
 fn parse_patch_body(raw: &Value) -> Result<PatchLinkInput, ApiError> {
     let obj = raw.as_object().ok_or_else(|| {
-        ApiError::new(ErrorCode::ValidationError).with_message("Request body must be a JSON object.")
+        ApiError::new(ErrorCode::ValidationError)
+            .with_message("Request body must be a JSON object.")
     })?;
 
-    fn nullable_str(obj: &serde_json::Map<String, Value>, key: &str) -> Result<Patch<String>, ApiError> {
+    fn nullable_str(
+        obj: &serde_json::Map<String, Value>,
+        key: &str,
+    ) -> Result<Patch<String>, ApiError> {
         match obj.get(key) {
             None => Ok(Patch::Absent),
             Some(Value::Null) => Ok(Patch::Null),
@@ -508,7 +447,10 @@ fn parse_patch_body(raw: &Value) -> Result<PatchLinkInput, ApiError> {
             Some(_) => Err(ApiError::validation(key, "Invalid value.")),
         }
     }
-    fn nullable_int(obj: &serde_json::Map<String, Value>, key: &str) -> Result<Patch<i64>, ApiError> {
+    fn nullable_int(
+        obj: &serde_json::Map<String, Value>,
+        key: &str,
+    ) -> Result<Patch<i64>, ApiError> {
         match obj.get(key) {
             None => Ok(Patch::Absent),
             Some(Value::Null) => Ok(Patch::Null),
@@ -551,7 +493,7 @@ async fn delete_one(
     user: CurrentUser,
     Path(id): Path<String>,
 ) -> Result<Response, ApiError> {
-    let link = load_owned(&state, &id, &user.id).await?;
+    let link = links::load_owned_link(&state.pool, &id, &user.id).await?;
     sqlx::query("DELETE FROM link WHERE id = ?")
         .bind(&link.id)
         .execute(&state.pool)
@@ -583,11 +525,12 @@ async fn bulk(
     }
 
     if body.urls.len() > state.cfg.bulk_max {
-        return Err(ApiError::new(ErrorCode::BulkLimitExceeded)
-            .with_message(format!(
+        return Err(
+            ApiError::new(ErrorCode::BulkLimitExceeded).with_message(format!(
                 "Please submit at most {} URLs at a time.",
                 state.cfg.bulk_max
-            )));
+            )),
+        );
     }
 
     let ip = client_ip(&headers);
@@ -728,12 +671,17 @@ async fn unlock(
 
     // Independent unlock limiter / lockout (AC-24).
     let key = rl_key(&ip);
-    if let Err(retry) = state.limiter.check_unlock(&link.id, &key, &state.cfg.rl_unlock) {
+    if let Err(retry) = state
+        .limiter
+        .check_unlock(&link.id, &key, &state.cfg.rl_unlock)
+    {
         return Err(ApiError::new(ErrorCode::UnlockLocked).with_retry_after(retry));
     }
 
     if !crate::auth::password::verify(&hash, &password) {
-        state.limiter.record_unlock_failure(&link.id, &key, &state.cfg.rl_unlock);
+        state
+            .limiter
+            .record_unlock_failure(&link.id, &key, &state.cfg.rl_unlock);
         return Err(ApiError::new(ErrorCode::WrongPassword));
     }
 

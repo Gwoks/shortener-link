@@ -94,19 +94,40 @@ mod tests {
     #[test]
     fn matches_exact_and_subdomains() {
         let s = set(&["evil.com"]);
-        assert!(is_host_blocked(&Url::parse("http://evil.com/x").unwrap(), &s));
-        assert!(is_host_blocked(&Url::parse("https://sub.evil.com/x").unwrap(), &s));
-        assert!(is_host_blocked(&Url::parse("https://www.evil.com/").unwrap(), &s));
-        assert!(is_host_blocked(&Url::parse("https://a.b.evil.com/").unwrap(), &s));
+        assert!(is_host_blocked(
+            &Url::parse("http://evil.com/x").unwrap(),
+            &s
+        ));
+        assert!(is_host_blocked(
+            &Url::parse("https://sub.evil.com/x").unwrap(),
+            &s
+        ));
+        assert!(is_host_blocked(
+            &Url::parse("https://www.evil.com/").unwrap(),
+            &s
+        ));
+        assert!(is_host_blocked(
+            &Url::parse("https://a.b.evil.com/").unwrap(),
+            &s
+        ));
     }
 
     #[test]
     fn does_not_match_unrelated() {
         let s = set(&["evil.com"]);
-        assert!(!is_host_blocked(&Url::parse("https://notevil.com/").unwrap(), &s));
-        assert!(!is_host_blocked(&Url::parse("https://example.com/").unwrap(), &s));
+        assert!(!is_host_blocked(
+            &Url::parse("https://notevil.com/").unwrap(),
+            &s
+        ));
+        assert!(!is_host_blocked(
+            &Url::parse("https://example.com/").unwrap(),
+            &s
+        ));
         // parent-walk must not match the TLD alone
         let s2 = set(&["com"]);
-        assert!(!is_host_blocked(&Url::parse("https://evil.com/").unwrap(), &s2));
+        assert!(!is_host_blocked(
+            &Url::parse("https://evil.com/").unwrap(),
+            &s2
+        ));
     }
 }

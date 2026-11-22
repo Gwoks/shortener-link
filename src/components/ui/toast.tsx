@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * Toast system (DESIGN §4.9, FR-42, AC-47). Built on Radix Toast so messages are
  * announced via an aria-live region; success is polite, errors assertive. The
@@ -49,10 +47,13 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     setItems((prev) => prev.filter((t) => t.id !== id))
   }, [])
 
-  const toast = useCallback<ToastContextValue['toast']>(({ title, description, variant = 'info' }) => {
-    const id = ++counter
-    setItems((prev) => [...prev, { id, title, description, variant }])
-  }, [])
+  const toast = useCallback<ToastContextValue['toast']>(
+    ({ title, description, variant = 'info' }) => {
+      const id = ++counter
+      setItems((prev) => [...prev, { id, title, description, variant }])
+    },
+    [],
+  )
 
   const success = useCallback<ToastContextValue['success']>(
     (title, description) => toast({ title, description, variant: 'success' }),
@@ -78,11 +79,14 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 if (!open) remove(t.id)
               }}
               className={cn(
-                'group pointer-events-auto relative flex w-[20rem] max-w-[calc(100vw-2rem)] items-start gap-3 rounded-md border border-border bg-surface-raised p-3 shadow-md',
+                'group pointer-events-auto relative flex w-[20rem] max-w-[calc(100vw-2rem)] items-start gap-3 rounded-md border border-border bg-surface-raised p-3 shadow-popover',
                 'data-[state=open]:animate-toast-in data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=cancel]:translate-x-0 data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)]',
               )}
             >
-              <Icon className={cn('mt-0.5 h-5 w-5 shrink-0', ICON_COLOR[t.variant])} aria-hidden="true" />
+              <Icon
+                className={cn('mt-0.5 h-5 w-5 shrink-0', ICON_COLOR[t.variant])}
+                aria-hidden="true"
+              />
               <div className="min-w-0 flex-1">
                 <ToastPrimitive.Title className="text-body-sm font-semibold text-text-primary">
                   {t.title}

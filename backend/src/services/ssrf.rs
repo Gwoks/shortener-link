@@ -204,7 +204,11 @@ mod tests {
 
     #[test]
     fn is_safe_destination_matches() {
-        assert!(is_safe_destination(&Url::parse("https://example.com").unwrap()));
-        assert!(!is_safe_destination(&Url::parse("http://10.0.0.1").unwrap()));
+        assert!(is_safe_destination(
+            &Url::parse("https://example.com").unwrap()
+        ));
+        assert!(!is_safe_destination(
+            &Url::parse("http://10.0.0.1").unwrap()
+        ));
     }
 }

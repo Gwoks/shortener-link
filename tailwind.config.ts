@@ -1,10 +1,10 @@
 /**
- * Tailwind config (root DESIGN.md — "Notion" warm-paper style, light only). All
- * colors map to SEMANTIC CSS custom properties defined in globals.css. Components
- * reference `bg-surface`, `text-secondary`, `border-default`, `accent`, etc. —
- * not raw palette values.
+ * Tailwind config (root DESIGN.md — "Notion" warm-paper style, light only).
+ * Token names come from src/design/tokens.ts (shared with lib/cn.ts); colors
+ * resolve to CSS custom properties defined once in globals.css.
  */
 import type { Config } from 'tailwindcss'
+import { ACCENT_PALETTE, FONT_SIZE, RADIUS, TEXT_COLOR } from './src/design/tokens'
 
 const config: Config = {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
@@ -24,16 +24,14 @@ const config: Config = {
           DEFAULT: 'var(--border-default)',
           strong: 'var(--border-strong)',
         },
-        text: {
-          primary: 'var(--text-primary)',
-          secondary: 'var(--text-secondary)',
-          tertiary: 'var(--text-tertiary)',
-          'on-accent': 'var(--text-on-accent)',
-        },
+        ink: 'var(--border-ink)',
+        text: TEXT_COLOR,
+        ...ACCENT_PALETTE,
         accent: {
           DEFAULT: 'var(--accent)',
           hover: 'var(--accent-hover)',
           'subtle-bg': 'var(--accent-subtle-bg)',
+          'subtle-hover': 'var(--accent-subtle-hover)',
         },
         success: { fg: 'var(--success-fg)', bg: 'var(--success-bg)' },
         warning: { fg: 'var(--warning-fg)', bg: 'var(--warning-bg)' },
@@ -61,47 +59,24 @@ const config: Config = {
         serif: 'var(--font-serif)',
         mono: 'var(--font-mono)',
       },
-      // Type scale (DESIGN.md §Type Scale): display=heading-lg, h1=heading,
-      // h2=heading-sm, h3=subheading. h4/mono/mono-lg/overline have no direct
-      // DESIGN role and keep their existing proportions, just the new font.
-      fontSize: {
-        display: ['48px', { lineHeight: '1.5', fontWeight: '700' }],
-        h1: ['40px', { lineHeight: '1.5', fontWeight: '700' }],
-        h2: ['22px', { lineHeight: '1.27', fontWeight: '600', letterSpacing: '-0.242px' }],
-        h3: ['20px', { lineHeight: '1', fontWeight: '600' }],
-        h4: ['16px', { lineHeight: '1.4', fontWeight: '600' }],
-        body: ['16px', { lineHeight: '1.5' }],
-        'body-sm': ['14px', { lineHeight: '1.43' }],
-        caption: ['12px', { lineHeight: '1.33', fontWeight: '500', letterSpacing: '0.12px' }],
-        overline: ['11px', { lineHeight: '1.3', fontWeight: '600', letterSpacing: '0.04em' }],
-        mono: ['13px', { lineHeight: '1.5' }],
-        'mono-lg': ['18px', { lineHeight: '1.4', fontWeight: '500' }],
-      },
-      borderRadius: {
-        // DESIGN.md §Border Radius: small=4px, buttons=8px, cards=12px, pills=9999px.
-        // `lg` is capped at the card radius — the system never exceeds 12px on
-        // rectangular content (DESIGN §Don'ts).
-        xs: '4px',
-        sm: '8px',
-        md: '12px',
-        lg: '12px',
-        pill: '9999px',
-      },
+      fontSize: FONT_SIZE,
+      borderRadius: RADIUS,
+      // Shadows are for floating chrome only (nav, popovers, the hero product
+      // mockup) — content cards use a hairline border (DESIGN §Elevation).
       boxShadow: {
-        xs: 'var(--shadow-xs)',
-        sm: 'var(--shadow-sm)',
-        md: 'var(--shadow-md)',
-        lg: 'var(--shadow-lg)',
+        nav: 'var(--shadow-nav)',
+        mockup: 'var(--shadow-mockup)',
+        popover: 'var(--shadow-popover)',
       },
       maxWidth: {
+        page: '1440px',
         content: '1200px',
-        'guest-hero': '640px',
-        settings: '640px',
+        form: '672px',
+        'guest-hero': '720px',
       },
       spacing: {
-        sidebar: '248px',
-        'sidebar-collapsed': '64px',
-        header: '56px',
+        header: '64px',
+        section: '80px',
       },
       transitionTimingFunction: {
         standard: 'cubic-bezier(.2,0,0,1)',
@@ -135,15 +110,16 @@ const config: Config = {
           to: { opacity: '1', transform: 'translateY(0) scale(1)' },
         },
         'sheet-in': {
+          from: { transform: 'translateX(100%)' },
+          to: { transform: 'translateX(0)' },
+        },
+        'rise-in': {
           from: { transform: 'translateY(100%)' },
           to: { transform: 'translateY(0)' },
         },
         'toast-in': {
           from: { opacity: '0', transform: 'translateX(8px)' },
           to: { opacity: '1', transform: 'translateX(0)' },
-        },
-        shimmer: {
-          '100%': { transform: 'translateX(100%)' },
         },
         spin: {
           to: { transform: 'rotate(360deg)' },
@@ -154,6 +130,7 @@ const config: Config = {
         'overlay-in': 'overlay-in var(--dur-base) var(--ease-standard)',
         'content-in': 'content-in var(--dur-base) var(--ease-standard)',
         'sheet-in': 'sheet-in var(--dur-slow) var(--ease-standard)',
+        'rise-in': 'rise-in var(--dur-slow) var(--ease-standard)',
         'toast-in': 'toast-in var(--dur-base) var(--ease-standard)',
         spin: 'spin 1s linear infinite',
       },

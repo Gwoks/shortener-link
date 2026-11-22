@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * Analytics time-range selector (DESIGN §5.7). Segmented control on desktop;
  * collapses to a native <select> on mobile (DESIGN §5.7 "range selector becomes a

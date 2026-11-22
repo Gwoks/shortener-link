@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * QR modal (DESIGN §5.9, USER-JOURNEY §4.7, FR-12/13/14, AC-17/18/19).
  * A centered dialog (bottom sheet on mobile via the shared Dialog primitive,
@@ -127,10 +125,18 @@ export function QrModal({ open, onOpenChange, shortUrl, code, linkId }: QrModalP
           <div className="space-y-1.5">
             <span className="text-caption font-medium text-text-secondary">Short link</span>
             <div className="flex items-center gap-2 rounded-sm border border-border bg-surface-subtle px-3 py-2">
-              <span className="min-w-0 flex-1 truncate font-mono text-body-sm text-text-primary" title={shortUrl}>
+              <span
+                className="min-w-0 flex-1 truncate font-mono text-body-sm text-text-primary"
+                title={shortUrl}
+              >
                 {shortUrl}
               </span>
-              <CopyButton value={shortUrl} variant="ghost" toastTitle="Short link copied!" aria-label="Copy short link" />
+              <CopyButton
+                value={shortUrl}
+                variant="ghost"
+                toastTitle="Short link copied!"
+                aria-label="Copy short link"
+              />
             </div>
           </div>
 

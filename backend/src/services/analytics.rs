@@ -8,7 +8,8 @@ use std::collections::BTreeMap;
 use serde_json::{json, Value};
 use sqlx::SqlitePool;
 
-use crate::error::{ApiError, ErrorCode};
+use crate::db::placeholders;
+use crate::error::{internal, ApiError};
 
 /// Analytics range selector.
 #[derive(Debug, Clone, Copy)]
@@ -121,20 +122,18 @@ async fn fetch_rollups(
     if link_ids.is_empty() {
         return Ok(Vec::new());
     }
-    let placeholders = std::iter::repeat("?")
-        .take(link_ids.len())
-        .collect::<Vec<_>>()
-        .join(",");
+    let id_list = placeholders(link_ids.len());
     let mut sql = format!(
         "SELECT link_id, day, clicks, uniques, by_referrer, by_country, by_device, by_browser
-         FROM click_rollup WHERE link_id IN ({placeholders})"
+         FROM click_rollup WHERE link_id IN ({id_list})"
     );
     if start.is_some() {
         sql.push_str(" AND day >= ?");
     }
     sql.push_str(" ORDER BY day ASC");
 
-    let mut q = sqlx::query_as::<_, (String, String, i64, i64, String, String, String, String)>(&sql);
+    let mut q =
+        sqlx::query_as::<_, (String, String, i64, i64, String, String, String, String)>(&sql);
     for id in link_ids {
         q = q.bind(id);
     }
@@ -144,18 +143,20 @@ async fn fetch_rollups(
     let rows = q.fetch_all(pool).await.map_err(internal)?;
     Ok(rows
         .into_iter()
-        .map(|(link_id, day, clicks, uniques, by_referrer, by_country, by_device, by_browser)| {
-            RollupRow {
-                link_id,
-                day,
-                clicks,
-                uniques,
-                by_referrer,
-                by_country,
-                by_device,
-                by_browser,
-            }
-        })
+        .map(
+            |(link_id, day, clicks, uniques, by_referrer, by_country, by_device, by_browser)| {
+                RollupRow {
+                    link_id,
+                    day,
+                    clicks,
+                    uniques,
+                    by_referrer,
+                    by_country,
+                    by_device,
+                    by_browser,
+                }
+            },
+        )
         .collect())
 }
 
@@ -271,7 +272,10 @@ pub async fn summary_analytics(
     let top_links: Vec<Value> = top
         .into_iter()
         .map(|(link_id, c)| {
-            let code = code_by_id.get(&link_id).cloned().unwrap_or_else(|| link_id.clone());
+            let code = code_by_id
+                .get(&link_id)
+                .cloned()
+                .unwrap_or_else(|| link_id.clone());
             json!({ "linkId": link_id, "code": code, "clicks": c })
         })
         .collect();
@@ -291,9 +295,4 @@ pub async fn summary_analytics(
 /// Reduce a stored day value to YYYY-MM-DD (rollup `day` is stored as a date).
 fn day_only(day: &str) -> String {
     day.chars().take(10).collect()
-}
-
-fn internal<E: std::fmt::Display>(e: E) -> ApiError {
-    tracing::error!("analytics error: {e}");
-    ApiError::new(ErrorCode::Internal)
 }

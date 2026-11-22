@@ -1,5 +1,3 @@
-'use client'
-
 /**
  * Segmented control / filter pills (DESIGN §4.12). Keyboard-navigable group of
  * toggle buttons. Selected = accent-subtle-bg + accent text. Used for analytics
@@ -34,7 +32,10 @@ export function Segmented<T extends string>({
     <div
       role="group"
       aria-label={ariaLabel}
-      className={cn('inline-flex items-center gap-0.5 rounded-md border border-border bg-surface-subtle p-0.5', className)}
+      className={cn(
+        'inline-flex items-center gap-0.5 rounded-md border border-border bg-surface-subtle p-0.5',
+        className,
+      )}
     >
       {options.map((opt) => {
         const active = opt.value === value
